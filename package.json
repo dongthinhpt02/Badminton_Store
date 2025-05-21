@@ -6,9 +6,40 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@bogeychan/elysia-oauth2": "^0.1.0",
+    "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/swagger": "^1.2.2",
+    "@oslojs/oauth2": "^0.5.0",
+    "@types/ms": "^2.1.0",
+    "axios": "^1.8.4",
+    "chalk": "^5.4.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "elysia": "^1.2.25",
+    "elysia-helmet": "^2.0.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^148.0.0",
+    "helmet": "^8.1.0",
+    "imagekit": "^6.0.0",
+    "json": "^11.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "meilisearch": "^0.50.0",
+    "mongodb": "^6.13.1",
+    "nodemailer": "^7.0.3",
+    "openid-client": "^6.4.2",
+    "oslo": "^1.2.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth2": "^0.2.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-local": "^1.0.0",
+    "qs": "^6.14.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
+    "@types/passport-google-oauth20": "^2.0.16",
     "bun-types": "latest"
   },
   "module": "src/index.js"

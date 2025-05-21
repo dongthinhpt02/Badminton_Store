@@ -1,0 +1,1 @@
+export const ErrNameColorInvalid = new Error("Name color is invalid");
