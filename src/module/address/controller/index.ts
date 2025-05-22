@@ -20,7 +20,8 @@ export class HttpAddressController {
         return successResponse(data, ctx);
     }
     private async updateAddress(ctx: AuthContext) {
-        const id = ctx.params.id;
+        const id = ctx.query.id;
+        const testId = ctx.query.id;
         const form = updateAddressSchema.parse(ctx.body);
         const data = await this.addressService.update(id, form);
         return successResponse(data, ctx);
@@ -34,7 +35,7 @@ export class HttpAddressController {
         const addressRoutes = new Elysia({ prefix: "/address" })
             .derive(mdlFactory.auth)
             .post("/create", this.insertAddress.bind(this))
-            .put("/update/:id", this.updateAddress.bind(this))
+            .put("/update", this.updateAddress.bind(this))
             .get("/search-by-user", this.getAllAddressByUserId.bind(this))
         return addressRoutes;
     }

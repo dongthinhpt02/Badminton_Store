@@ -1,5 +1,5 @@
 import Elysia, { Context } from "elysia";
-import { loginSchema, signupSchema, updateProfileSchema, resetPassowrdSchema, changePasswordSchema } from "../model";
+import { loginSchema, signupSchema, updateProfileSchema, resetPassowrdSchema, changePasswordSchema, updateUserSchema } from "../model";
 import { IUserService } from "../interface";
 import { successResponse } from "../../../shared/utils/response";
 import { AuthContext } from "../../../shared/middleware";
@@ -61,13 +61,13 @@ export class HttpUserController {
   private async sendTokenToEmail(ctx : Context) {
     const email = resetPassowrdSchema.parse(ctx.body);
     const data = await this.service.sendEmailToResetPassword(email);
-    const resetUrl = `${appConfig.app.baseUrl}/users/reset-password/${data}`;
+    const resetUrl = `${appConfig.app.baseUrl}/users/reset-password?token=${data}`;
     await sendResetPasswordEmail(email.email,resetUrl);
     return successResponse(data, ctx);
   }
 
   private async resetPassword(ctx: Context) {
-    const token = ctx.params.token;
+    const token = ctx.query.token;
     logger.success(token);
     const form = changePasswordSchema.parse(ctx.body);
     const data = await this.service.changePassword(token, form);
@@ -86,6 +86,12 @@ export class HttpUserController {
     const form = updateProfileSchema.parse(ctx.body);
     const data = await this.service.updateProfile(user_id, form);
 
+    return successResponse(data, ctx);
+  }
+  private async updateUser(ctx: AuthContext) {
+    const user_id = ctx.decoded.sub;
+    const form = updateUserSchema.parse(ctx.body);
+    const data = await this.service.updateUser(user_id, form);
     return successResponse(data, ctx);
   }
 
@@ -136,12 +142,13 @@ export class HttpUserController {
       .post("/login", this.login.bind(this))
       .post("/signup", this.signup.bind(this))
       .post("/request-reset-password", this.sendTokenToEmail.bind(this))
-      .post("/reset-password/:token", this.resetPassword.bind(this))
+      .post("/reset-password", this.resetPassword.bind(this))
       
       // auth middleware
       .derive(mdlFactory.auth)
       .get("/", this.getProfile.bind(this))
-      .post("/update-profile", this.updateProfile.bind(this))
+      .put("/update-profile", this.updateProfile.bind(this))
+      .put("/update-user", this.updateUser.bind(this))
       .get("/renew", this.renewToken.bind(this))
       .delete("/logout", this.logout.bind(this));
       const oauthRoute = new Elysia({ prefix: '/oauth' })

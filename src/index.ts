@@ -15,6 +15,7 @@ import { setupProductItemModule } from "./module/productitem";
 import { setupAddressModule } from "./module/address";
 import { setupDiscountModule } from "./module/discount";
 import { setupPaymentModule } from "./module/payment";
+import { setupColorModule } from "./module/color";
 
 async function bootServer(port: number) {
   // Connect mongodb
@@ -39,6 +40,7 @@ async function bootServer(port: number) {
   const addressMoudle = setupAddressModule(sctx);
   const discountModule = setupDiscountModule(sctx);
   const paymentModule = setupPaymentModule(sctx);
+  const colorModule = setupColorModule(sctx);
   const adminModule = setupAdminModule(sctxadmin);
   // setupModule
   app.use(userModule);
@@ -52,6 +54,7 @@ async function bootServer(port: number) {
   app.use(imgekitModule);
   app.use(addressMoudle);
   app.use(paymentModule);
+  app.use(colorModule);
   app.use(discountModule);
   app.use(swagger());
   // important, required listen(port) to run app

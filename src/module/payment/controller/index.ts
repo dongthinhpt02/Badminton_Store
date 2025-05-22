@@ -6,12 +6,12 @@ import { MdlFactory } from "../../../shared/interface";
 export class HttpPaymentController {
     constructor(private readonly paymentService: IPaymentService) { }
     private async getById(ctx: Context) {
-        const id = ctx.params.id;
+        const id = ctx.query.id;
         const data = await this.paymentService.getById(id);
         return successResponse(data, ctx);
     }
     private async getByName(ctx: Context) {
-        const name = ctx.params.namePayment;
+        const name = ctx.query.namePayment;
         const data = await this.paymentService.getByName(name);
         return successResponse(data, ctx);
     }
@@ -23,8 +23,8 @@ export class HttpPaymentController {
         const productRoute = new Elysia({ prefix: "/payment" })
             .derive(mdlFactory.auth)
             .get("", this.getAllActive.bind(this))
-            .get("/:id", this.getById.bind(this))
-            .get("/name/:namePayment", this.getByName.bind(this));
+            .get("/id", this.getById.bind(this))
+            .get("/name", this.getByName.bind(this));
         return productRoute;
     }
 }

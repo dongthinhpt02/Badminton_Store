@@ -10,21 +10,21 @@ export class HttpSizeController {
         return successResponse(data, ctx);
     }
     async getById(ctx: Context) {
-        const id = ctx.params.id;
+        const id = ctx.query.id;
         const data = await this.sizeService.getById(id);
         return successResponse(data, ctx);
     }
     async getByName(ctx: Context) {
-        const nameSize = ctx.params.nameSize;
+        const nameSize = ctx.query.nameSize;
         const data = await this.sizeService.getByName(nameSize);
         return successResponse(data, ctx);
     }
     getRoutes(mdlFactory : MdlFactory){
                 const usersRoute = new Elysia({ prefix: "/size" })
-                    .derive(mdlFactory.auth)
+                    // .derive(mdlFactory.auth)
                     .get("", this.getAllActive.bind(this))
-                    .get("/:id", this.getById.bind(this))
-                    .get("/name/:nameSize", this.getByName.bind(this))
+                    .get("/id", this.getById.bind(this))
+                    .get("/name", this.getByName.bind(this))
                     return usersRoute;
             }
 }

@@ -49,7 +49,7 @@ export class HttpCartController {
     return successResponse(data, ctx);
   }
   private async updateCartItem(ctx: Context) {
-    const id = ctx.params.id;
+    const id = ctx.query.id;
     Logger.success(id);
     const form = ctx.body as UpdateCartItem;
     const data = await this.cartItemService.update(id, form);
@@ -68,7 +68,7 @@ export class HttpCartController {
   //   return successResponse(data, ctx);
   // }
   private async deleteCartItem(ctx: AuthContext) {
-    const id = ctx.params.id;
+    const id = ctx.query.id;
     const data = await this.cartItemService.delete(id);
     return successResponse(data, ctx);
   }
@@ -121,9 +121,9 @@ export class HttpCartController {
       .get("/items", this.getCartItem.bind(this))
       .put("/updatetotal", this.updateCartTotals.bind(this))
       .post("/items/insert", this.insertCartItem.bind(this))
-      .put("/items/update/:id", this.updateCartItem.bind(this))
+      .put("/items/update", this.updateCartItem.bind(this))
       .post("/calculate-shipping-fee", this.calculateShippingFee.bind(this))
-      .delete("/items/delete/:id", this.deleteCartItem.bind(this));
+      .delete("/items/delete", this.deleteCartItem.bind(this));
     return cartsRoute;
   }
 }

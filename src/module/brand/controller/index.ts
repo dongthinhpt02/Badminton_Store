@@ -9,13 +9,14 @@ export class HttpBrandController {
         private readonly brandService: IBrandService
     ) {}
     private async getById(ctx: Context) {
-        const id = ctx.params.id;
+        // const id = ctx.params.id;
+        const id = ctx.query.id;
         const data = await this.brandService.getById(id);
 
         return successResponse(data, ctx);
     }
     private async getByName(ctx: Context) {
-        const brandName = ctx.params.brandName;
+        const brandName = ctx.query.brandName;
         const data = await this.brandService.getByName(brandName);
 
         return successResponse(data, ctx);
@@ -28,10 +29,10 @@ export class HttpBrandController {
 
     getRoutes(mdlFactory : MdlFactory){
         const usersRoute = new Elysia({ prefix: "/brand" })
-            .derive(mdlFactory.auth)
+            // .derive(mdlFactory.auth)
             .get("", this.getAllBrandActive.bind(this))
-            .get("/:id", this.getById.bind(this))
-            .get("/name/:brandName", this.getByName.bind(this))
+            .get("/id", this.getById.bind(this))
+            .get("/name", this.getByName.bind(this))
             return usersRoute;
     }
 }

@@ -16,6 +16,8 @@ import {
     Status,
     IResetPasswordForm,
     IChangePasswordForm,
+    updateUserSchema,
+    updateProfileSchema,
 
 } from "../model";
 import { ErrEmailAndUsernameExisted, ErrEmailNotFound, ErrInvalidEmailAndPassword } from "../model/error";
@@ -426,7 +428,13 @@ export class UserService implements IUserService {
         return user as User;
     }
     async updateProfile(id: string, form: IUpdateProfileForm): Promise<User> {
-        const updatedUser = userSchema.parse(form);
+        const updatedUser = updateProfileSchema.parse(form);
+        await this.repository.update(id, updatedUser);
+        const user = await this.repository.findById(id);
+        return user as User;
+    }
+    async updateUser(id: string, form: IUpdateUserForm): Promise<User> {
+        const updatedUser = updateUserSchema.parse(form);
         await this.repository.update(id, updatedUser);
         const user = await this.repository.findById(id);
         return user as User;

@@ -6,13 +6,13 @@ import { MdlFactory } from "../../../shared/interface";
 export class HttpColorController {
     constructor(private readonly colorService: IColorService) {}
     private async getById(ctx: Context) {
-        const id = ctx.params.id;
+        const id = ctx.query.id;
         const data = await this.colorService.getById(id);
         return successResponse(data, ctx);
     }
     private async getByName(ctx: Context) {
-        const colorName = ctx.params.colorName;
-        const data = await this.colorService.getByName(colorName);
+        const nameColor = ctx.query.nameColor;
+        const data = await this.colorService.getByName(nameColor);
         return successResponse(data, ctx);
     }
     private async getAllColorActive(ctx: Context) {
@@ -22,10 +22,10 @@ export class HttpColorController {
 
     getRoutes(mdlFactory: MdlFactory) {
         const colorRoute = new Elysia({ prefix: "/color" })
-            .derive(mdlFactory.auth)
-            .get("/color", this.getAllColorActive.bind(this))
-            .get("/color/:id", this.getById.bind(this))
-            .get("/color/name/:colorName", this.getByName.bind(this));
+            // .derive(mdlFactory.auth)
+            .get("", this.getAllColorActive.bind(this))
+            .get("/id", this.getById.bind(this))
+            .get("/name", this.getByName.bind(this));
         return colorRoute;
     }
 }

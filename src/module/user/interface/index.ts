@@ -38,6 +38,7 @@ export interface IUserService {
   signupAdmin (form: ISignupForm) : Promise<IAuthen>;
   getProfile: (id: string) => Promise<User>;
   updateProfile: (id: string, form: IUpdateProfileForm) => Promise<User>;
+  updateUser : (id: string, form: IUpdateUserForm) => Promise<User>;
   renewToken: (oldRefreshToken: string) => Promise<IAuthen>;
   renewTokenAdmin: (oldRefreshToken: string) => Promise<IAuthen>;
   logout: (refreshToken: string) => Promise<boolean>;
