@@ -61,7 +61,8 @@ export class HttpUserController {
   private async sendTokenToEmail(ctx : Context) {
     const email = resetPassowrdSchema.parse(ctx.body);
     const data = await this.service.sendEmailToResetPassword(email);
-    await sendResetPasswordEmail(email.email, "http://localhost:8080/users/reset-password/" + data);
+    const resetUrl = `${appConfig.app.baseUrl}/users/reset-password/${data}`;
+    await sendResetPasswordEmail(email.email,resetUrl);
     return successResponse(data, ctx);
   }
 
