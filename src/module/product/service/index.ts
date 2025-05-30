@@ -1,11 +1,17 @@
 import { ObjectId } from "mongodb";
 import { IProductRepository, IProductService} from "../interface";
 import { createProductSchema, ICreateProductForm, IUpdateProductForm, Product, Status } from "../model";
+import { mongodbService } from "../../../shared/common/mongodb";
 
 export class ProductService implements IProductService {
     constructor(private readonly productRepository: IProductRepository) {}
 
     async create(form : ICreateProductForm) : Promise<Product> {
+        const find = await mongodbService.product.findOne(
+            { brandId : new ObjectId(form.brandId), cateId : new ObjectId(form.cateId)});
+        if (find) {
+            throw new Error("Product already exists");
+        }
         const fixedForm = {
             ...form,
             brandId: new ObjectId(form.brandId),

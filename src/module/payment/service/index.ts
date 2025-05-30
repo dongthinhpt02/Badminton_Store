@@ -64,4 +64,18 @@ export class PaymentService implements IPaymentService {
         return result;
     }
 
+    async VNPayPayment(id: string, payload: {
+        amount: number,
+    
+    }): Promise<any> {
+        const result = await this.paymentRepository.VNPayPayment(id, payload);
+        return result;
+    }
+    async CODPayment(id: string, payload: {
+        amount: number,
+    
+    }): Promise<any> {
+        const result = await this.paymentRepository.CODPayment(id, payload);
+        return result;
+    }
 }

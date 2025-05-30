@@ -24,6 +24,9 @@ import { createDiscountSchema, ICreateDiscountForm, IUpdateDiscountForm } from "
 import { IDiscountService } from "../../discount/interface";
 import { createPaymentSchema, ICreatePayment, IUpdatePayment } from "../../payment/model";
 import { IPaymentService } from "../../payment/interface";
+import { IOrderService } from "../../order/interface";
+import { dateRangeSchema } from "../../order/model";
+import { signupSchema } from "../../user/model";
 
 export class HttpAdminController {
     constructor(
@@ -36,9 +39,15 @@ export class HttpAdminController {
         private readonly addressService: IAddressService,
         private readonly discountService: IDiscountService,
         private readonly paymentService : IPaymentService,
+        private readonly orderService : IOrderService,
         private readonly usersService: IUserService,
         private readonly adminService: IAdminService
     ) { }
+    async signupManager(ctx: Context) {
+        const form = signupSchema.parse(ctx.body);
+        const data = await this.usersService.signupManager(form);
+        return successResponse(data, ctx);
+    }
     async renewTokenAdmin(ctx: AuthContext) {
         const token = ctx.token;
         if (ctx.decoded.type !== TokenType.RefreshToken)
@@ -46,6 +55,37 @@ export class HttpAdminController {
 
         const data = await this.usersService.renewTokenAdmin(token);
 
+        return successResponse(data, ctx);
+    }
+    // *******user********
+    async lockUser(ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.usersService.lockUser(id);
+        return successResponse(data, ctx);
+    }
+    async restoreUser(ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.usersService.restoreUser(id);
+        return successResponse(data, ctx);
+    }
+    async getAllUser(ctx: Context) {
+        const data = await this.usersService.getAllUser();
+        return successResponse(data, ctx);
+    }
+    async getAllActiveUser(ctx: Context) {
+        const data = await this.usersService.getAllActiveUser();
+        return successResponse(data, ctx);
+    }
+    async getAllInactiveUser(ctx: Context) {
+        const data = await this.usersService.getAllInactiveUser();
+        return successResponse(data, ctx);
+    }
+    async getAllManager(ctx: Context) {
+        const data = await this.usersService.getAllManager();
+        return successResponse(data, ctx);
+    }
+    async getAllShipper(ctx: Context) {
+        const data = await this.usersService.getAllShipper();
         return successResponse(data, ctx);
     }
     // *******brand*******
@@ -444,10 +484,128 @@ export class HttpAdminController {
         const data = await this.paymentService.getByNameAdmin(name);
         return successResponse(data, ctx);
     }
+    //***********order********* */
+    private async getAllOrder(ctx: Context) {
+        const data = await this.orderService.getAllOrder();
+        return successResponse(data, ctx);
+    }
+    private async getOrderDetail(ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.orderService.getOrderDetail(id);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderProcessing (ctx: Context) {
+        const data = await this.orderService.getAllOrderProcessing();
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderShipped (ctx: Context) {
+        const data = await this.orderService.getAllOrderShipped();
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderDelivered (ctx: Context) {
+        const data = await this.orderService.getAllOrderDelivered();
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderCompleted (ctx: Context) {
+        const data = await this.orderService.getAllOrderCompleted();
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderCancelled (ctx: Context) {
+        const data = await this.orderService.getAllOrderCancelled();
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderCreatedBetweenTime (ctx: Context) {
+        const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const data = await this.orderService.getAllOrderCreatedBetweenTime(start, end);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderShippedBetweenTime (ctx: Context) {
+        const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const data = await this.orderService.getAllOrderShippedBetweenTime(start, end);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderDeliveredBetweenTime (ctx: Context) {
+        const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const data = await this.orderService.getAllOrderDeliveredBetweenTime(start, end);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderCompletedBetweenTime (ctx: Context) {
+        const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const data = await this.orderService.getAllOrderCompletedBetweenTime(start, end);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderByname (ctx: Context) {
+        const name = ctx.query.fullname;
+        const data = await this.orderService.getAllOrderByName(name);
+        return successResponse(data, ctx);
+    }
+    private async getOrderByOrderId(ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.orderService.getOrderByOrderId(id);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderByUserId(ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.orderService.getAllOrderByUserId(id);
+        return successResponse(data, ctx);
+    }
+    private async getAllOrderByShipperId (ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.orderService.getAllOrderByShipperId(id);
+        return successResponse(data, ctx);
+    }
+    private async cancelOrder(ctx: Context) {
+        const id = ctx.query.id;
+        const data = await this.orderService.cancelOrderAdmin(id);
+        return successResponse(data, ctx);
+    }
+    //***********Statistic********* */
+    private async getStatistic(ctx: Context) {
+        const data = await this.orderService.generalStatistic();
+        return successResponse(data, ctx);
+    }
+    private async statisticByStatus(ctx: Context) {
+        const data = await this.orderService.statisticByStatus();
+        return successResponse(data, ctx);
+    }
+    private async statisticByTime(ctx: Context) {
+        const data = await this.orderService.statisticByTime();
+        return successResponse(data, ctx);
+    }
+    private async getTopSellingProductItem(ctx: Context) {
+        const data = await this.orderService.getTopSellingProductItem();
+        return successResponse(data, ctx);
+    }
+    private async getBrandStatistics(ctx: Context) {
+        const data = await this.orderService.getBrandStatistics();
+        return successResponse(data, ctx);
+    }
+    private async getCategoryStatistics(ctx: Context) {
+        const data = await this.orderService.getCategoryStatistics();
+        return successResponse(data, ctx);
+    }
     getRoutes(mdlFactory: MdlFactory) {
         const module = new Elysia({ prefix: "/admin" })
             .derive(mdlFactory.auth)
-            .get("/renew", this.renewTokenAdmin.bind(this));
+            .get("/renew", this.renewTokenAdmin.bind(this))
+            .post("/signup-manager", this.signupManager.bind(this))
+        const userRoutes = new Elysia({prefix: "/user"})
+            .derive(mdlFactory.auth)
+            .put("/lock-user", this.lockUser.bind(this))
+            .put("/restore-user", this.restoreUser.bind(this))
+            .get("", this.getAllUser.bind(this))
+            .get("/active", this.getAllActiveUser.bind(this))
+            .get("/inactive", this.getAllInactiveUser.bind(this))
+            .get("/shipper", this.getAllShipper.bind(this))
+            .get("/manager", this.getAllManager.bind(this))
         const brandRoutes = new Elysia({ prefix: "/brand" })
             .derive(mdlFactory.auth)
             .get("", this.getAllBrand.bind(this))
@@ -544,6 +702,34 @@ export class HttpAdminController {
             .put("/update", this.updatePayment.bind(this))
             .put("/delete", this.deletePayment.bind(this))
             .put("/restore", this.restorePayment.bind(this));
+        const orderRoutes = new Elysia({ prefix: "/order" })
+            .derive(mdlFactory.auth)
+            .get("", this.getAllOrder.bind(this))
+            .get("/detail-order", this.getOrderDetail.bind(this))
+            .get("/order-processing", this.getAllOrderProcessing.bind(this))
+            .get("/order-shipped", this.getAllOrderShipped.bind(this))
+            .get("/order-delivered", this.getAllOrderDelivered.bind(this))
+            .get("/order-completed", this.getAllOrderCompleted.bind(this))
+            .get("/order-cancelled", this.getAllOrderCancelled.bind(this))
+            .get("/order-processing/time", this.getAllOrderCreatedBetweenTime.bind(this))
+            .get("/order-shipped/time", this.getAllOrderShippedBetweenTime.bind(this))
+            .get("/order-delivered/time", this.getAllOrderDeliveredBetweenTime.bind(this))
+            .get("/order-completed/time", this.getAllOrderCompletedBetweenTime.bind(this))
+            .get("/search-by-name", this.getAllOrderByname.bind(this))
+            .get("/search-by-orderid", this.getOrderByOrderId.bind(this))
+            .get("/search-by-userid", this.getAllOrderByUserId.bind(this))
+            .get("/search-by-shipperid", this.getAllOrderByShipperId.bind(this))
+            .put("/cancel-order", this.cancelOrder.bind(this))
+        const statisticRoutes = new Elysia({ prefix: "/statistic" })
+            .derive(mdlFactory.auth)
+            .get("/general-statistic", this.getStatistic.bind(this))
+            .get("/by-status", this.statisticByStatus.bind(this))
+            .get("/by-time", this.statisticByTime.bind(this))
+            .get("/top-selling", this.getTopSellingProductItem.bind(this))
+            .get("/by-brand", this.getBrandStatistics.bind(this))
+            .get("/by-cate", this.getCategoryStatistics.bind(this))
+        module.use(statisticRoutes);
+        module.use(orderRoutes);
         module.use(paymentRoutes);
         module.use(discountRoutes);
         module.use(addressRoutes);
@@ -553,6 +739,7 @@ export class HttpAdminController {
         module.use(sizeRoutes);
         module.use(cateRoutes);
         module.use(brandRoutes);
+        module.use(userRoutes);
         return module;
     }
 }

@@ -5,10 +5,12 @@ import { Cart, cartSchema, IUpdateCartForm } from "../model";
 import { CartItem } from "../../cartitem/model";
 import appConfig from "../../../shared/common/config";
 import { getDimensionForProduct } from "../../../shared/common/type";
+import { createVnpayChecksum, formatDate, sortObject } from "../../../shared/utils/dateformat";
+import qs from "qs";
+import crypto from 'crypto';
 
 export class MongodbCartRepository implements ICartRepository {
   async insert(cart: Cart): Promise<Cart> {
-
     const result = await mongodbService.cart.insertOne(cart);
 
     const found = await mongodbService.cart.findOne({ _id: result.insertedId });
@@ -172,10 +174,14 @@ export class MongodbCartRepository implements ICartRepository {
         weight: dim.weight
       };
     }));
+
     const totalWeight = items.reduce((sum, item) => sum + item.weight * item.quantity, 0);
     const totalLength = Math.max(...items.map(item => item.length));
     const totalWidth = Math.max(...items.map(item => item.width));
-    const totalHeight = items.reduce((sum, item) => sum + item.height * item.quantity, 0);
+    const totalHeight = Math.max(...items.map(item => item.height));
+
+
+    const insuranceValue = cart.totalPrice as number / 10 || 0;
 
     const body = {
       from_district_id: payload.from_district_id,
@@ -183,16 +189,115 @@ export class MongodbCartRepository implements ICartRepository {
       to_district_id: payload.to_district_id,
       to_ward_code: payload.to_ward_code,
       service_id: appConfig.GHN.serviceId,
-      insurance_value: cart.totalPrice || 0,
-      coupon: null,
-      weight: totalHeight,
+      insurance_value: insuranceValue || 0,
+      coupon: "",
+      weight: totalWeight,
       length: totalLength,
       width: totalWidth,
-      height: totalWeight,
+      height: totalHeight,
       items
     };
 
     return body;
+  }
+  async calculateTotalFee(id: string, payload: {
+    from_district_id: number,
+    from_ward_code: string,
+    to_district_id: number,
+    to_ward_code: string,
+    adress: string,
+    phonenumber : string,
+  }): Promise<any> {
+    const cart = await mongodbService.cart.findOne({ userId: new ObjectId(id) });
+    if (!cart) {
+      throw new Error("Cart not found");
+    }
+
+    const cartItems = await mongodbService.cartitem.find({ cartId: cart._id }).toArray();
+    if (!cartItems || cartItems.length === 0) {
+      throw new Error("Cart items not found");
+    }
+
+    const items = await Promise.all(cartItems.map(async (item) => {
+      const dim = await getDimensionForProduct(item.nameProductItem);
+      return {
+        name: item.nameProductItem,
+        quantity: item.quantity,
+        height: dim.height,
+        length: dim.length,
+        width: dim.width,
+        weight: dim.weight
+      };
+    }));
+
+    const totalWeight = items.reduce((sum, item) => sum + item.weight * item.quantity, 0);
+    const totalLength = Math.max(...items.map(item => item.length));
+    const totalWidth = Math.max(...items.map(item => item.width));
+    const totalHeight = Math.max(...items.map(item => item.height));
+
+
+    const insuranceValue = cart.totalPrice as number / 10 || 0;
+
+    const body = {
+      from_district_id: payload.from_district_id,
+      from_ward_code: payload.from_ward_code,
+      to_district_id: payload.to_district_id,
+      to_ward_code: payload.to_ward_code,
+      service_id: appConfig.GHN.serviceId,
+      insurance_value: insuranceValue || 0,
+      coupon: "",
+      weight: totalWeight,
+      length: totalLength,
+      width: totalWidth,
+      height: totalHeight,
+      items
+    };
+
+    return body;
+  }
+  async VNPayPayment(id: string, payload: {
+    amount: number
+  }): Promise<any> {
+    const user = await mongodbService.users.findOne({ _id: new ObjectId(id) });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    if (typeof payload.amount !== 'number' || isNaN(payload.amount) || payload.amount <= 0) {
+      throw new Error("Invalid amount");
+    }
+
+    
+    const body = {
+      vnp_Version: "2.1.0",
+      vnp_Command: "pay",
+      vnp_TmnCode: appConfig.VNP.vnpTmnCode,
+      vnp_Amount: Math.round(Number(payload.amount) * 100), // Convert to VND
+      vnp_CreateDate: formatDate(new Date()),
+      vnp_CurrCode: "VND",
+      vnp_IpAddr: "127.0.0.1",
+      vnp_Locale: 'vn',
+      vnp_OrderInfo: "123456",
+      vnp_OrderType: "other",
+      vnp_TxnRef: new ObjectId().toHexString(), // Unique transaction reference
+      vnp_ReturnUrl: encodeURIComponent(appConfig.VNP.vnpReturnUrl), // encodeURIComponent(appConfig.VNP.vnpReturnUrl,
+   
+      // vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)), // 15 minutes from now
+    }
+
+    const sortedParams = sortObject(body);
+    const signData = qs.stringify(sortedParams, { encode: false });
+    const secretKey = appConfig.VNP.vnpHashSecret;
+    if (!secretKey) {
+      throw new Error("Missing VNPAY Hash Secret");
+    }
+
+    const hmac = crypto.createHmac('sha512', secretKey);
+    const signature = hmac.update(signData, 'utf-8').digest('hex');
+
+    sortedParams['vnp_SecureHash'] = signature;
+
+    const paymentUrl = `${appConfig.VNP.vnpUrl}?${qs.stringify(sortedParams, { encode: false })}`;
+    return paymentUrl;
   }
 
 }

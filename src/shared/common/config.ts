@@ -21,7 +21,7 @@ const appConfig = {
   google: {
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    googleRedirectUrl: process.env.GOOGLE_REDIRECT_URL,
+    googleRedirectUrl: `${process.env.APP_URL}:${process.env.APP_PORT}/users/google/callback`,
     smtpGoogleEmail: process.env.SMTP_GMAIL,
     smtpGooglePassword: process.env.SMTP_GMAIL_PASSWORD
   },
@@ -37,6 +37,16 @@ const appConfig = {
     token: process.env.GHN_TOKEN,
     shopId: process.env.GHN_SHOP_ID,
     serviceId: process.env.GHN_SERVICE_ID,
+  },
+  VNP: {
+    vnpUrl: process.env.VNP_URL,
+    vnpTmnCode: process.env.VNP_TMNCODE,
+    vnpHashSecret: process.env.VNP_HASHSECRET,
+    vnpReturnUrl: `${process.env.APP_URL}:${process.env.APP_PORT}/payment/vnpay/return`,
+  },
+  PERSONAL:{
+    phoneNumber : process.env.PHONE_NUMBER,
+    address : process.env.ADDRESS,
   }
 };
 

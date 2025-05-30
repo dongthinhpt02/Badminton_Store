@@ -36,4 +36,22 @@ export class CartService implements ICartService{
         const result = await this.repository.calculateShippingFee(id, payload);
         return result;
       }
+    async calculateTotalFee(id: string, payload: {
+        from_district_id: number,
+        from_ward_code: string,
+        to_district_id: number,
+        to_ward_code: string,
+        address : string,
+        phone: string,
+      }): Promise<any> {
+        const result = await this.repository.calculateTotalFee(id, payload);
+        return result;
+      }
+    async VNPayPayment(id: string, payload: {
+        amount: number,
+    
+    }): Promise<any> {
+        const result = await this.repository.VNPayPayment(id, payload);
+        return result;
+    }
 }

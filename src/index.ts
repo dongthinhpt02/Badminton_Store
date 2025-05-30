@@ -16,6 +16,10 @@ import { setupAddressModule } from "./module/address";
 import { setupDiscountModule } from "./module/discount";
 import { setupPaymentModule } from "./module/payment";
 import { setupColorModule } from "./module/color";
+import setupShipperMiddlewares from "./shared/middleware/shipper";
+import { setupShipperModule } from "./module/shipper";
+import setupManagerMiddlewares from "./shared/middleware/manager";
+import { setupManagerModule } from "./module/manager";
 
 async function bootServer(port: number) {
   // Connect mongodb
@@ -27,6 +31,12 @@ async function bootServer(port: number) {
 
   const sctxadmin = {
     mdlFactory: setupAdminMiddlewares(),
+  }
+  const sctxshipper = {
+    mdlFactory : setupShipperMiddlewares(),
+  }
+  const sctxmanager = {
+    mdlFactory : setupManagerMiddlewares(),
   }
   // create module
   const userModule = setupUserModule(sctx);
@@ -41,7 +51,16 @@ async function bootServer(port: number) {
   const discountModule = setupDiscountModule(sctx);
   const paymentModule = setupPaymentModule(sctx);
   const colorModule = setupColorModule(sctx);
+
+
   const adminModule = setupAdminModule(sctxadmin);
+
+
+  const shipperModule = setupShipperModule(sctxshipper);
+
+
+  const managerModule = setupManagerModule(sctxmanager);
+
   // setupModule
   app.use(userModule);
   app.use(cartModule);
@@ -56,6 +75,10 @@ async function bootServer(port: number) {
   app.use(paymentModule);
   app.use(colorModule);
   app.use(discountModule);
+
+  app.use(shipperModule);
+
+  app.use(managerModule);
   app.use(swagger());
   // important, required listen(port) to run app
   app.listen(port);

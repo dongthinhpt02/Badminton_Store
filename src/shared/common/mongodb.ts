@@ -16,6 +16,8 @@ import { Payment } from "../../module/payment/model";
 import { Province } from "../../module/province/model";
 import { District } from "../../module/district/model";
 import { Ward } from "../../module/ward/model";
+import { DraftOrder, Order } from "../../module/order/model";
+import { OrderDetail } from "../../module/orderdetail/model";
 
 const uri = 'mongodb+srv://trandongthinh:Kirito123456@badmintonstore.jygkj.mongodb.net/?retryWrites=true&w=majority'
 
@@ -100,6 +102,15 @@ class MongoDatabaseService {
   }
   get ward() : Collection<Ward>{
     return this.db.collection("ward");
+  }
+  get order() : Collection<Order> {
+    return this.db.collection("order");
+  }
+  get orderdetail () : Collection<OrderDetail> {
+    return this.db.collection("orderdetail");
+  }
+  get draftorder () : Collection<DraftOrder> {
+    return this.db.collection("draftorder");
   }
 }
 

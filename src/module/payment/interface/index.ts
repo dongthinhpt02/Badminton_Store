@@ -12,6 +12,12 @@ export interface IPaymentRepository{
     findAllPaymentActive(): Promise<Payment[]>
     findAllPaymentInactive(): Promise<Payment[]>
     findAllPayment(): Promise<Payment[]>
+    VNPayPayment (id: string, payload: {
+        amount: number,
+    }): Promise<any>
+    CODPayment (id: string, payload: {
+        amount: number,
+    }): Promise<any>
 }
 export interface IPaymentService{
     create(form : IPaymentCreateForm): Promise<Payment>
@@ -25,4 +31,10 @@ export interface IPaymentService{
     getAllPaymentActive(): Promise<Payment[]>
     getAllPaymentInactive(): Promise<Payment[]>
     getAllPayment(): Promise<Payment[]>
+    VNPayPayment(id: string, payload: {
+        amount: number,
+    }): Promise<any>
+    CODPayment(id: string, payload: {
+        amount: number,
+    }): Promise<any>
 }

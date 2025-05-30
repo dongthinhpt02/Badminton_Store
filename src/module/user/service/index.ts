@@ -31,11 +31,13 @@ import { TokenRequestResult } from '@oslojs/oauth2';
 import { AskLoginInput, LoginWithGoogleInput, LoginWithProviderInput } from "../model/oauth";
 import { cartSchema } from "../../cart/model";
 import { ImagekitService } from "../../imagekit/service";
+import { Order, OrderStatus } from "../../order/model";
+import { OrderDetail } from "../../orderdetail/model";
 
 const googleOauthClient = new google.auth.OAuth2({
     clientId: appConfig.google.googleClientId,
     clientSecret: appConfig.google.googleClientSecret,
-    redirectUri: 'http://localhost:8080/users/google/callback',
+    redirectUri: "${appConfig.app.baseUrl}/users/google/callback",
 });
 
 export class UserService implements IUserService {
@@ -63,6 +65,44 @@ export class UserService implements IUserService {
                     TokenType.AccessToken,
                     appConfig.jwt.accessTokenExpiresIn),
                 this.repository.generateTokenAdmin(
+                    user._id.toString(),
+                    TokenType.RefreshToken,
+                    appConfig.jwt.refreshTokenExpiresIn
+                ),
+            ]);
+            // Add new refresh token to db
+            await mongodbService.refreshTokens.insertOne({ token: refresh_token });
+            return {
+                access_token,
+                refresh_token,
+            };
+        }
+        if (user.role === UserRole.SHIPPER) {
+            const [access_token, refresh_token] = await Promise.all([
+                this.repository.generateTokenShipper(
+                    user._id.toString(),
+                    TokenType.AccessToken,
+                    appConfig.jwt.accessTokenExpiresIn),
+                this.repository.generateTokenShipper(
+                    user._id.toString(),
+                    TokenType.RefreshToken,
+                    appConfig.jwt.refreshTokenExpiresIn
+                ),
+            ]);
+            // Add new refresh token to db
+            await mongodbService.refreshTokens.insertOne({ token: refresh_token });
+            return {
+                access_token,
+                refresh_token,
+            };
+        }
+        if (user.role === UserRole.MANAGER) {
+            const [access_token, refresh_token] = await Promise.all([
+                this.repository.generateTokenManager(
+                    user._id.toString(),
+                    TokenType.AccessToken,
+                    appConfig.jwt.accessTokenExpiresIn),
+                this.repository.generateTokenManager(
                     user._id.toString(),
                     TokenType.RefreshToken,
                     appConfig.jwt.refreshTokenExpiresIn
@@ -194,8 +234,8 @@ export class UserService implements IUserService {
         );
         return token;
     }
-    async changePassword(token: string, form : IChangePasswordForm): Promise<boolean> {
-        const find = await mongodbService.users.findOne({forgot_password_token: token});
+    async changePassword(token: string, form: IChangePasswordForm): Promise<boolean> {
+        const find = await mongodbService.users.findOne({ forgot_password_token: token });
         if (!find) {
             return false;
         }
@@ -222,6 +262,26 @@ export class UserService implements IUserService {
             { $set: { status: Status.INACTIVE } }
         )
         return true;
+    }
+    async getAllUser(): Promise<User[]> {
+        const users = await mongodbService.users.find().toArray();
+        return users as User[];
+    }
+    async getAllActiveUser(): Promise<User[]> {
+        const users = await mongodbService.users.find({ status: Status.ACTIVE }).toArray();
+        return users as User[];
+    }
+    async getAllInactiveUser(): Promise<User[]> {
+        const users = await mongodbService.users.find({ status: Status.INACTIVE }).toArray();
+        return users as User[];
+    }
+    async getAllManager(): Promise<User[]> {
+        const users = await mongodbService.users.find({ role: UserRole.MANAGER }).toArray();
+        return users as User[];
+    }
+    async getAllShipper(): Promise<User[]> {
+        const users = await mongodbService.users.find({ role: UserRole.SHIPPER }).toArray();
+        return users as User[];
     }
     async restoreUser(userId: string): Promise<boolean> {
         const find = await mongodbService.users.findOne({ _id: new ObjectId(userId) });
@@ -342,11 +402,11 @@ export class UserService implements IUserService {
 
         // Generate token
         const [access_token, refresh_token] = await Promise.all([
-            this.repository.generateToken(
+            this.repository.generateTokenManager(
                 user._id.toString()
                 , TokenType.AccessToken,
                 appConfig.jwt.accessTokenExpiresIn),
-            this.repository.generateToken(
+            this.repository.generateTokenManager(
                 user._id.toString(),
                 TokenType.RefreshToken,
                 appConfig.jwt.refreshTokenExpiresIn
@@ -391,7 +451,7 @@ export class UserService implements IUserService {
             deleted_at: null,
             restored_at: null,
             status: Status.ACTIVE,
-            role: UserRole.SHIPPER, 
+            role: UserRole.SHIPPER,
             email_verify_token: null,
             forgot_password_token: null,
             bio: null,
@@ -402,11 +462,11 @@ export class UserService implements IUserService {
 
         // Generate token
         const [access_token, refresh_token] = await Promise.all([
-            this.repository.generateToken(
+            this.repository.generateTokenShipper(
                 user._id.toString()
                 , TokenType.AccessToken,
                 appConfig.jwt.accessTokenExpiresIn),
-            this.repository.generateToken(
+            this.repository.generateTokenShipper(
                 user._id.toString(),
                 TokenType.RefreshToken,
                 appConfig.jwt.refreshTokenExpiresIn
@@ -493,6 +553,61 @@ export class UserService implements IUserService {
             refresh_token,
         };
     }
+    async renewTokenShipper(oldRefreshToken: string): Promise<IAuthen> {
+        const decoded = (await jwt.verifyToken(oldRefreshToken)) as ITokenPayload;
+
+        const remainingTime = decoded.exp! - Math.floor(Date.now() / 1000);
+
+        // Create new token
+        const [access_token, refresh_token] = await Promise.all([
+            this.repository.generateTokenShipper(
+                decoded.sub,
+                TokenType.AccessToken,
+                appConfig.jwt.accessTokenExpiresIn as StringValue),
+            this.repository.generateTokenShipper(
+                decoded.sub,
+                TokenType.RefreshToken,
+                appConfig.jwt.refreshTokenExpiresIn as StringValue
+            ),
+        ]);
+
+        // Add new refresh token to db
+        await mongodbService.refreshTokens.insertOne({ token: refresh_token });
+        // Remove old token from db
+        await mongodbService.refreshTokens.deleteOne({ token: oldRefreshToken });
+        return {
+            access_token,
+            refresh_token,
+        };
+    }
+    async renewTokenManager(oldRefreshToken: string): Promise<IAuthen> {
+        const decoded = (await jwt.verifyToken(oldRefreshToken)) as ITokenPayload;
+
+        const remainingTime = decoded.exp! - Math.floor(Date.now() / 1000);
+
+        // Create new token
+        const [access_token, refresh_token] = await Promise.all([
+            this.repository.generateTokenManager(
+                decoded.sub,
+                TokenType.AccessToken,
+                appConfig.jwt.accessTokenExpiresIn as StringValue),
+            this.repository.generateTokenManager(
+                decoded.sub,
+                TokenType.RefreshToken,
+                appConfig.jwt.refreshTokenExpiresIn as StringValue
+            ),
+        ]);
+
+        // Add new refresh token to db
+        await mongodbService.refreshTokens.insertOne({ token: refresh_token });
+        // Remove old token from db
+        await mongodbService.refreshTokens.deleteOne({ token: oldRefreshToken });
+        return {
+            access_token,
+            refresh_token,
+        };
+    }
+
     async logout(refreshToken: string): Promise<boolean> {
         // Remove token from db
         await mongodbService.refreshTokens.deleteOne({ token: refreshToken });
@@ -663,6 +778,91 @@ export class UserService implements IUserService {
         } else {
             throw ErrInvalidRequest.withLog('Invalid provider');
         }
+    }
+    async getAllOrdersByUserId(userId: string): Promise<Order[]> {
+        const orders = await mongodbService.order.find({ userId: new ObjectId(userId) }).toArray();
+        return orders as Order[];
+    }
+    async getOrderDetailByOrderIdAndUserId(id: string, userId: string): Promise<OrderDetail[] | null> {
+        const OrderDetailList = await mongodbService.order.aggregate([
+            {
+                $match: {
+                    _id: new ObjectId(id),
+                    userId: new ObjectId(userId)
+                }
+            },
+            {
+                $lookup: {
+                    from: "orderdetail",
+                    localField: "_id",
+                    foreignField: "orderId",
+                    as: "orderdetail"
+                }
+            },
+        ]).toArray()
+        return OrderDetailList as OrderDetail[];
+    }
+    async getAllOrderProcessingByUserId(userId: string): Promise<Order[]> {
+        const orders = await mongodbService.order.find({ userId: new ObjectId(userId), status: OrderStatus.PROCESSING }).toArray();
+        return orders as Order[];
+    }
+
+    async getAllOrderShippedByUserId(userId: string): Promise<Order[]> {
+        const orders = await mongodbService.order.find({ userId: new ObjectId(userId), status: OrderStatus.SHIPPED }).toArray();
+        return orders as Order[];
+    }
+    async getAllOrderDeliveredByUserId(userId: string): Promise<Order[]> {
+        const orders = await mongodbService.order.find({ userId: new ObjectId(userId), status: OrderStatus.DELIVERED }).toArray();
+        return orders as Order[];
+    }
+    async getAllOrderCompletedByUserId(userId: string): Promise<Order[]> {
+        const orders = await mongodbService.order.find({ userId: new ObjectId(userId), status: OrderStatus.COMPLETED }).toArray();
+        return orders as Order[];
+    }
+    async getAllOrderCancelledByUserId(userId: string): Promise<Order[]> {
+        const orders = await mongodbService.order.find({ userId: new ObjectId(userId), status: OrderStatus.CANCELLED }).toArray();
+        return orders as Order[];
+    }
+    async takeOrderCompletedByUserId(id: string, userId: string): Promise<Order> {
+        const order = await mongodbService.order.updateOne(
+            {
+                _id: new ObjectId(id),
+                userId: new ObjectId(userId),
+                status: OrderStatus.DELIVERED
+            },
+            {
+                $set: {
+                    status: OrderStatus.COMPLETED,
+                    completed_at: new Date()
+                }
+            },
+
+        );
+        if (order.modifiedCount === 0) {
+            throw AppError.from(ErrInternalServer, 500).withLog("Failed to take order, maybe already taken by another user");
+        }
+        const updatedOrder = await mongodbService.order.findOne({ _id: new ObjectId(id) });
+        return updatedOrder as Order;
+    }
+    async cancelOrderUser(id : string, userId : string): Promise<Order> {
+        const find = await mongodbService.order.findOne(
+            {_id : new ObjectId(id), userId : new ObjectId(userId)})
+        if(!find){
+            throw Error("Order not find")
+        }
+        if(find.status === OrderStatus.CANCELLED){
+            throw Error("Order has been cancelled")
+        }
+        if(find.status === OrderStatus.DELIVERED){
+            throw Error("Order has been delivered")
+        }
+        if (find.status === OrderStatus.COMPLETED) {
+            throw Error("Order has been completed")
+        }
+        const cancel = await mongodbService.order.updateOne({ _id: new ObjectId(id), userId : new ObjectId(userId) }, 
+        { $set: { status: OrderStatus.CANCELLED } });
+        const result = await mongodbService.order.findOne({ _id: new ObjectId(id), userId : new ObjectId(userId) });
+        return result as Order;
     }
 }
 

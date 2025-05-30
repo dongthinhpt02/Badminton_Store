@@ -30,13 +30,13 @@ export class HttpUserController {
       return successResponse(data, ctx);
     } catch (err) {
       // Xử lý lỗi Zod
-    if (err instanceof z.ZodError) {
-      return new Response(JSON.stringify({
-        error: "Validation failed",
-        details: err.errors
-      }), { status: 400 });
-    }
-    throw err;
+      if (err instanceof z.ZodError) {
+        return new Response(JSON.stringify({
+          error: "Validation failed",
+          details: err.errors
+        }), { status: 400 });
+      }
+      throw err;
     }
   }
 
@@ -48,21 +48,38 @@ export class HttpUserController {
       return successResponse(data, ctx);
     } catch (err) {
       // Xử lý lỗi Zod
-    if (err instanceof z.ZodError) {
-      return new Response(JSON.stringify({
-        error: "Validation failed",
-        details: err.errors
-      }), { status: 400 });
+      if (err instanceof z.ZodError) {
+        return new Response(JSON.stringify({
+          error: "Validation failed",
+          details: err.errors
+        }), { status: 400 });
+      }
+      throw err;
     }
-    throw err;
+  }
+  private async signupShipper(ctx: Context) {
+    try {
+      const form = signupSchema.parse(ctx.body);
+      const data = await this.service.signupShipper(form);
+
+      return successResponse(data, ctx);
+    } catch (err) {
+      // Xử lý lỗi Zod
+      if (err instanceof z.ZodError) {
+        return new Response(JSON.stringify({
+          error: "Validation failed",
+          details: err.errors
+        }), { status: 400 });
+      }
+      throw err;
     }
   }
 
-  private async sendTokenToEmail(ctx : Context) {
+  private async sendTokenToEmail(ctx: Context) {
     const email = resetPassowrdSchema.parse(ctx.body);
     const data = await this.service.sendEmailToResetPassword(email);
     const resetUrl = `${appConfig.app.baseUrl}/users/reset-password?token=${data}`;
-    await sendResetPasswordEmail(email.email,resetUrl);
+    await sendResetPasswordEmail(email.email, resetUrl);
     return successResponse(data, ctx);
   }
 
@@ -134,7 +151,55 @@ export class HttpUserController {
     ctx.store.login_state = '';
     return successResponse(profile, ctx);
   }
-  
+
+  private async getAllOrdersByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const orders = await this.service.getAllOrdersByUserId(userId);
+    return successResponse(orders, ctx);
+  }
+  private async getOrderByIdAndUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const id = ctx.query.id;
+    const order = await this.service.getOrderDetailByOrderIdAndUserId(id, userId);
+    return successResponse(order, ctx);
+  }
+  private async getAllOrderProcessingByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const orders = await this.service.getAllOrderProcessingByUserId(userId);
+    return successResponse(orders, ctx);
+  }
+  private async getAllOrderShippedByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const orders = await this.service.getAllOrderShippedByUserId(userId);
+    return successResponse(orders, ctx);
+  }
+  private async getAllOrderDeliveredByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const orders = await this.service.getAllOrderDeliveredByUserId(userId);
+    return successResponse(orders, ctx);
+  }
+  private async getAllOrderCompletedByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const orders = await this.service.getAllOrderCompletedByUserId(userId);
+    return successResponse(orders, ctx);
+  }
+  private async getAllOrderCancelledByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const orders = await this.service.getAllOrderCancelledByUserId(userId);
+    return successResponse(orders, ctx);
+  }
+  private async takeOrderCompletedByUserId(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const id = ctx.query.id;
+    const order = await this.service.takeOrderCompletedByUserId(id, userId);
+    return successResponse(order, ctx);
+  }
+  private async cancelOrderUser(ctx: AuthContext) {
+    const userId = ctx.decoded.sub;
+    const id = ctx.query.id;
+    const order = await this.service.cancelOrderUser(id, userId);
+    return successResponse(order, ctx);
+  }
 
   getRoutes(mdlFactory: MdlFactory) {
     const module = new Elysia();
@@ -143,7 +208,7 @@ export class HttpUserController {
       .post("/signup", this.signup.bind(this))
       .post("/request-reset-password", this.sendTokenToEmail.bind(this))
       .post("/reset-password", this.resetPassword.bind(this))
-      
+
       // auth middleware
       .derive(mdlFactory.auth)
       .get("/", this.getProfile.bind(this))
@@ -151,12 +216,27 @@ export class HttpUserController {
       .put("/update-user", this.updateUser.bind(this))
       .get("/renew", this.renewToken.bind(this))
       .delete("/logout", this.logout.bind(this));
-      const oauthRoute = new Elysia({ prefix: '/oauth' })
+    const oauthRoute = new Elysia({ prefix: '/oauth' })
       .state('login_state', '')
       .get('/request/:provider', this.requestLogin.bind(this))
       .post('/login/:provider', this.loginWithProvider.bind(this));
-      const adminRoute = new Elysia({ prefix: "/admin" })
+    const adminRoute = new Elysia({ prefix: "/admin" })
       .post("/signup", this.signupAdmin.bind(this))
+    const shipperRoute = new Elysia({ prefix: "/shipper" })
+      .post("/signup", this.signupShipper.bind(this));
+    const orderRoute = new Elysia({ prefix: "/order" })
+      .derive(mdlFactory.auth)
+      .get("/all-order", this.getAllOrdersByUserId.bind(this))
+      .get("/detail-order", this.getOrderByIdAndUserId.bind(this))
+      .get("/all-order-processing", this.getAllOrderProcessingByUserId.bind(this))
+      .get("/all-order-shipped", this.getAllOrderShippedByUserId.bind(this))
+      .get("/all-order-delivered", this.getAllOrderDeliveredByUserId.bind(this))
+      .get("/all-order-completed", this.getAllOrderCompletedByUserId.bind(this))
+      .get("/all-order-cancelled", this.getAllOrderCancelledByUserId.bind(this))
+      .post("/take-order-completed", this.takeOrderCompletedByUserId.bind(this))
+      .put("/cancel-order", this.cancelOrderUser.bind(this));
+    module.use(orderRoute);
+    module.use(shipperRoute);
     module.use(usersRoute);
     module.use(oauthRoute);
     module.use(adminRoute);

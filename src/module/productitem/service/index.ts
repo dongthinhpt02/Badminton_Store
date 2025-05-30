@@ -2,10 +2,19 @@ import { ObjectId } from "mongodb";
 import { IProductItemRepository, IProductItemService } from "../interface";
 import { ProductItem, IUpdateProductItemForm, Status, ICreateProductItemForm, createProductItemSchema } from "../model";
 import { normalizeText } from "../../../shared/utils/normalize";
+import { mongodbService } from "../../../shared/common/mongodb";
 
 export class ProductItemService implements IProductItemService {
     constructor(private readonly productItemRepository: IProductItemRepository) {}
     async create(form: ICreateProductItemForm): Promise<ProductItem> {
+        const find = await mongodbService.productitem.findOne({
+            productId: new ObjectId(form.productId),
+            sizeId: new ObjectId(form.sizeId),
+            colorId: new ObjectId(form.colorId)
+        })
+        if (find) {
+            throw new Error("ProductItem already exists");
+        }
         const productItemToInsert = {
             _id: new ObjectId(),
             productId: form.productId,

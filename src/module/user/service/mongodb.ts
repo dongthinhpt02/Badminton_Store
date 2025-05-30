@@ -28,7 +28,26 @@ export class MongodbUserRepository implements IUserRepository {
       options: { expiresIn: expiresIn ?? appConfig.jwt.accessTokenExpiresIn },
     });
   }
-  
+  async generateTokenShipper(
+    userId: string,
+    type: TokenType,
+    expiresIn: StringValue
+  ): Promise<string> {
+    return jwt.generateToken({
+      payload: { sub: userId, role: UserRole.SHIPPER, type },
+      options: { expiresIn: expiresIn ?? appConfig.jwt.accessTokenExpiresIn },
+    });
+  }
+  async generateTokenManager(
+    userId: string,
+    type: TokenType,
+    expiresIn: StringValue
+  ): Promise<string> {
+    return jwt.generateToken({
+      payload: { sub: userId, role: UserRole.MANAGER, type },
+      options: { expiresIn: expiresIn ?? appConfig.jwt.accessTokenExpiresIn },
+    });
+  }
   async findById(id: string): Promise<User | null> {
     const user = await mongodbService.users.findOne({ _id: new ObjectId(id) });
     return user;
