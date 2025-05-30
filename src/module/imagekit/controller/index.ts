@@ -1,20 +1,34 @@
-import Elysia from "elysia";
-import { IImageKitService } from "../interface";
-import { MdlFactory } from "../../../shared/interface";
+import Elysia from 'elysia'
+import { ImagekitService } from '../service'
 
 export class HttpImageKitController {
-    constructor(private readonly imagekitService: IImageKitService) {}
-    
-    async uploadPicture (ctx: any) {
-        const { file } = ctx.body;
-        const result = await this.imagekitService.generateImageToken(file);
-        return result;
+    constructor(private readonly imagekitService: ImagekitService) {}
+
+    async uploadPicture(ctx: any) {
+        const file = ctx.body?.file
+
+        if (!file) return { error: 'No file provided' }
+
+        const arrayBuffer = await file.arrayBuffer()
+        const fileBuffer = Buffer.from(arrayBuffer)
+
+        const uploadResult = await this.imagekitService.uploadFile(fileBuffer, file.name, '/products')
+
+        if (!uploadResult) return { error: 'Failed to upload file' }
+
+        return {
+            message: 'File uploaded successfully',
+            url: uploadResult.url,
+            thumbnailUrl: uploadResult.thumbnailUrl,
+            fileId: uploadResult.fileId,
+        }
     }
-    
-    getRoutes(mdlFactory: MdlFactory) {
-        const imagekitRoute = new Elysia({ prefix: "/imagekit" })
+
+    getRoutes(mdlFactory: any) {
+        const imagekitRoute = new Elysia({ prefix: '/imagekit' })
             .derive(mdlFactory.auth)
-            .post("/upload", this.uploadPicture.bind(this));
-        return imagekitRoute;
+            .post('/upload', this.uploadPicture.bind(this))
+
+        return imagekitRoute
     }
 }

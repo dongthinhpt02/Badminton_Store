@@ -1,3 +1,8 @@
 export interface IImageKitService {
-    generateImageToken: (payload: any) => Promise<string | null>;
+    uploadFile : (fileBuffer: Buffer, fileName: string, folder?: string) => Promise<UploadResult | null>;
+}
+export interface UploadResult {
+    url: string;
+    thumbnailUrl: string;
+    fileId: string;
 }
