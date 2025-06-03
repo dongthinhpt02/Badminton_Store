@@ -47,6 +47,9 @@ const appConfig = {
   PERSONAL:{
     phoneNumber : process.env.PHONE_NUMBER,
     address : process.env.ADDRESS,
+  },
+  SOCKET:{
+    port : Number(process.env.SOCKET_PORT)
   }
 };
 

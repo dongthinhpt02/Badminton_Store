@@ -41,7 +41,8 @@ export class HttpAdminController {
         private readonly paymentService : IPaymentService,
         private readonly orderService : IOrderService,
         private readonly usersService: IUserService,
-        private readonly adminService: IAdminService
+        private readonly adminService: IAdminService,
+        // private broadcastOrderUpdate: (data: any) => void
     ) { }
     async signupManager(ctx: Context) {
         const form = signupSchema.parse(ctx.body);
@@ -720,6 +721,7 @@ export class HttpAdminController {
             .get("/search-by-userid", this.getAllOrderByUserId.bind(this))
             .get("/search-by-shipperid", this.getAllOrderByShipperId.bind(this))
             .put("/cancel-order", this.cancelOrder.bind(this))
+            
         const statisticRoutes = new Elysia({ prefix: "/statistic" })
             .derive(mdlFactory.auth)
             .get("/general-statistic", this.getStatistic.bind(this))

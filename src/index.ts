@@ -33,10 +33,10 @@ async function bootServer(port: number) {
     mdlFactory: setupAdminMiddlewares(),
   }
   const sctxshipper = {
-    mdlFactory : setupShipperMiddlewares(),
+    mdlFactory: setupShipperMiddlewares(),
   }
   const sctxmanager = {
-    mdlFactory : setupManagerMiddlewares(),
+    mdlFactory: setupManagerMiddlewares(),
   }
   // create module
   const userModule = setupUserModule(sctx);
@@ -81,6 +81,9 @@ async function bootServer(port: number) {
   app.use(managerModule);
   app.use(swagger());
   // important, required listen(port) to run app
+
+  
+
   app.listen(port);
   console.log(
     `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

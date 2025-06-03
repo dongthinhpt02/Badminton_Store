@@ -3,6 +3,7 @@ import { IOrderRepository } from "../interface";
 import { DateRangeForm, DraftOrder, Order, OrderStatus } from "../model";
 import { mongodbService } from "../../../shared/common/mongodb";
 import { OrderDetail } from "../../orderdetail/model";
+import app from "../../../app";
 
 export class MongodbOrderRepository implements IOrderRepository {
     async insertDraftOrder(draftOrder: DraftOrder): Promise<DraftOrder> {
@@ -123,10 +124,10 @@ export class MongodbOrderRepository implements IOrderRepository {
     }
     async generalStatistic(): Promise<any> {
         const orders = mongodbService.order;
-    
+
         // Tổng số đơn hàng hoàn thành
         const totalOrders = await orders.countDocuments({ status: OrderStatus.COMPLETED });
-    
+
         // Doanh thu theo phương thức thanh toán (chỉ đơn hoàn thành)
         const revenueByPayment = await orders.aggregate([
             { $match: { status: OrderStatus.COMPLETED } },
@@ -137,7 +138,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             }
         ]).toArray();
-    
+
         // Doanh thu theo tháng (chỉ đơn hoàn thành)
         const revenueByMonth = await orders.aggregate([
             { $match: { status: OrderStatus.COMPLETED } },
@@ -152,7 +153,7 @@ export class MongodbOrderRepository implements IOrderRepository {
             },
             { $sort: { '_id.year': 1, '_id.month': 1 } }
         ]).toArray();
-    
+
         // Tổng sản phẩm đã bán (chỉ đơn hoàn thành)
         const totalProductsSold = await orders.aggregate([
             { $match: { status: OrderStatus.COMPLETED } },
@@ -164,10 +165,10 @@ export class MongodbOrderRepository implements IOrderRepository {
             }
         ]).toArray();
         const totalProducts = totalProductsSold[0]?.total || 0;
-    
+
         // Tổng số user đã mua hàng (chỉ đơn hoàn thành)
         const totalUsers = await orders.distinct('userId', { status: OrderStatus.COMPLETED });
-    
+
         const result = {
             totalOrders: totalOrders,
             revenueByPayment: revenueByPayment,
@@ -175,10 +176,10 @@ export class MongodbOrderRepository implements IOrderRepository {
             totalProductItemSold: totalProducts,
             totalUsersBought: totalUsers.length
         };
-    
+
         return result;
     }
-    
+
     async statisticByStatus(): Promise<any> {
         const statusStats = await mongodbService.order.aggregate([
             { $match: { status: OrderStatus.COMPLETED } },
@@ -261,7 +262,7 @@ export class MongodbOrderRepository implements IOrderRepository {
     }
     async getTopSellingProductItem(): Promise<any> {
         const orderDetails = mongodbService.orderdetail;
-    
+
         // -------- TOP BY QUANTITY SOLD --------
         const topByQuantityRaw = await orderDetails.aggregate([
             {
@@ -285,14 +286,14 @@ export class MongodbOrderRepository implements IOrderRepository {
             { $sort: { totalQuantitySold: -1 } },
             { $limit: 10 }
         ]).toArray();
-    
+
         const topByQuantity = topByQuantityRaw.map(item => ({
             productItemId: item._id,
             nameProductItem: item.nameProductItem,
             imageProductItem: item.imageProductItem,
             totalQuantitySold: item.totalQuantitySold
         }));
-    
+
         // -------- TOP BY REVENUE --------
         const topByRevenueRaw = await orderDetails.aggregate([
             {
@@ -316,14 +317,14 @@ export class MongodbOrderRepository implements IOrderRepository {
             { $sort: { totalRevenue: -1 } },
             { $limit: 10 }
         ]).toArray();
-    
+
         const topByRevenue = topByRevenueRaw.map(item => ({
             productItemId: item._id,
             nameProductItem: item.nameProductItem,
             imageProductItem: item.imageProductItem,
             totalRevenue: item.totalRevenue
         }));
-    
+
         return {
             topByQuantity,
             topByRevenue
@@ -331,7 +332,7 @@ export class MongodbOrderRepository implements IOrderRepository {
     }
     async getBrandStatistics(): Promise<any> {
         const orderDetails = mongodbService.orderdetail;
-    
+
         const stats = await orderDetails.aggregate([
             // Join với order để lấy status
             {
@@ -344,7 +345,7 @@ export class MongodbOrderRepository implements IOrderRepository {
             },
             { $unwind: '$order' },
             { $match: { 'order.status': OrderStatus.COMPLETED } },
-    
+
             // Join với productItem để lấy productId
             {
                 $lookup: {
@@ -355,7 +356,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             },
             { $unwind: '$productItem' },
-    
+
             // Join với product để lấy brandId và name
             {
                 $lookup: {
@@ -366,7 +367,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             },
             { $unwind: '$product' },
-    
+
             // Join với brand để lấy nameBrand
             {
                 $lookup: {
@@ -377,7 +378,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             },
             { $unwind: '$brand' },
-    
+
             // Group theo brand
             {
                 $group: {
@@ -390,7 +391,7 @@ export class MongodbOrderRepository implements IOrderRepository {
             },
             { $sort: { totalQuantitySold: -1 } } // Hoặc totalRevenue nếu muốn sắp xếp theo doanh thu
         ]).toArray();
-    
+
         return stats.map(item => ({
             brandId: item._id,
             nameBrand: item.nameBrand,
@@ -401,7 +402,7 @@ export class MongodbOrderRepository implements IOrderRepository {
     }
     async getCategoryStatistics(): Promise<any> {
         const orderDetails = mongodbService.orderdetail;
-    
+
         const stats = await orderDetails.aggregate([
             // Join với order để lấy status + totalCart
             {
@@ -414,7 +415,7 @@ export class MongodbOrderRepository implements IOrderRepository {
             },
             { $unwind: '$order' },
             { $match: { 'order.status': OrderStatus.COMPLETED } },
-    
+
             // Join với productItem để lấy productId
             {
                 $lookup: {
@@ -425,7 +426,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             },
             { $unwind: '$productItem' },
-    
+
             // Join với product để lấy cateId
             {
                 $lookup: {
@@ -436,7 +437,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             },
             { $unwind: '$product' },
-    
+
             // Join với category để lấy nameCate
             {
                 $lookup: {
@@ -447,7 +448,7 @@ export class MongodbOrderRepository implements IOrderRepository {
                 }
             },
             { $unwind: '$category' },
-    
+
             // Group theo cate
             {
                 $group: {
@@ -460,7 +461,7 @@ export class MongodbOrderRepository implements IOrderRepository {
             },
             { $sort: { totalQuantitySold: -1 } } // Hoặc sort theo totalRevenue nếu muốn
         ]).toArray();
-    
+
         return stats.map(item => ({
             cateId: item._id,
             nameCate: item.nameCate,
@@ -470,34 +471,48 @@ export class MongodbOrderRepository implements IOrderRepository {
         }));
     }
     async cancelOrderAdmin(orderId: string): Promise<Order> {
-        const find = await mongodbService.order.findOne({_id : new ObjectId(orderId)})
-        if(!find){
+        const find = await mongodbService.order.findOne({ _id: new ObjectId(orderId) })
+        if (!find) {
             throw Error("Order not find")
         }
-        if(find.status === OrderStatus.CANCELLED){
+        if (find.status === OrderStatus.CANCELLED) {
             throw Error("Order has been cancelled")
         }
-        const cancel = await mongodbService.order.updateOne({ _id: new ObjectId(orderId) }, 
-        { $set: { status: OrderStatus.CANCELLED } });
+        const cancel = await mongodbService.order.updateOne({ _id: new ObjectId(orderId) },
+            { $set: { status: OrderStatus.CANCELLED } });
+        const orderItems = await mongodbService.orderdetail.find({ orderId: new ObjectId(orderId) }).toArray();
+
+        for (const item of orderItems) {
+            await mongodbService.productitem.updateOne(
+                { _id: item.productItemId },
+                { $inc: { quantity: item.quantity } }
+            );
+        }
+
         const result = await mongodbService.order.findOne({ _id: new ObjectId(orderId) });
-        return result as Order;
-    }
-    async cancelOrderUser(orderId : string, userId : string): Promise<Order> {
-        const find = await mongodbService.order.findOne({_id : new ObjectId(orderId), 
-            userId : new ObjectId(userId)
-        })
-        if(!find){
+        if(!result){
             throw Error("Order not find")
         }
-        if(find.status === OrderStatus.CANCELLED){
+
+        return result as Order;
+    }
+    async cancelOrderUser(orderId: string, userId: string): Promise<Order> {
+        const find = await mongodbService.order.findOne({
+            _id: new ObjectId(orderId),
+            userId: new ObjectId(userId)
+        })
+        if (!find) {
+            throw Error("Order not find")
+        }
+        if (find.status === OrderStatus.CANCELLED) {
             throw Error("Order has been cancelled")
         }
         if (find.status === OrderStatus.COMPLETED) {
             throw Error("Order has been completed")
         }
-        const cancel = await mongodbService.order.updateOne({ _id: new ObjectId(orderId), userId : new ObjectId(userId) }, 
-        { $set: { status: OrderStatus.CANCELLED } });
-        const result = await mongodbService.order.findOne({ _id: new ObjectId(orderId), userId : new ObjectId(userId) });
+        const cancel = await mongodbService.order.updateOne({ _id: new ObjectId(orderId), userId: new ObjectId(userId) },
+            { $set: { status: OrderStatus.CANCELLED } });
+        const result = await mongodbService.order.findOne({ _id: new ObjectId(orderId), userId: new ObjectId(userId) });
         return result as Order;
     }
 }
