@@ -1,4 +1,4 @@
-import { ITokenPayload, MdlFactory, UserRole } from "./../interface/index";
+ import { ITokenPayload, MdlFactory, UserRole } from "./../interface/index";
 import { type Context } from "elysia";
 import jwt from "../common/jwt";
 import { ErrTokenInvalid } from "../utils/error";

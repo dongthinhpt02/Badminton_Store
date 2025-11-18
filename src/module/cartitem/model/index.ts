@@ -1,37 +1,54 @@
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 
+export enum Status {
+  Tick = "tick",
+  Untick = "untick",
+}
+
 export const cartItemSchema = z.object({
-    _id: z.instanceof(ObjectId),
-    cartId: z.instanceof(ObjectId),
-    productItemId: z.instanceof(ObjectId),
-    // sessionId: z.instanceof(ObjectId),
-    nameProductItem: z.string().regex(/^[\p{L}0-9 ]+$/u, {
-        message: "Tên chi tiết sản phẩm chỉ được chứa chữ cái, số và dấu cách",
-    }),
-    price: z.number().min(1),
-    quantity: z.number().min(1),
-    imageProductItem: z.string(),
-    totalPriceCartItem: z.number(),
-})
+  _id: z.instanceof(ObjectId),
+  cartId: z.instanceof(ObjectId),
+  productItemId: z.instanceof(ObjectId),
+  // sessionId: z.instanceof(ObjectId),
+  nameProductItem: z.string().regex(/^[\p{L}0-9 ]+$/u, {
+    message: "Tên chi tiết sản phẩm chỉ được chứa chữ cái, số và dấu cách",
+  }),
+  status: z.nativeEnum(Status).default(Status.Untick),
+  price: z.number().min(1),
+  quantity: z.number().min(1),
+  imageProductItem: z.string(),
+  totalPriceCartItem: z.number(),
+});
 export type CartItem = z.infer<typeof cartItemSchema>;
 export type CateItemForm = z.infer<typeof cartItemSchema>;
 
-export const updateCartItemSchema = cartItemSchema.pick({
+export const updateCartItemSchema = cartItemSchema
+  .pick({
     quantity: true,
     // totalPriceCartItem: true,
-}).required();
+  })
+  .required();
+export const UpdateStatusCartItem = cartItemSchema
+  .pick({
+    status: true,
+  })
+  .required();
+export type UpdateStatusCartItemForm = z.infer<typeof UpdateStatusCartItem>;
+
 export type UpdateCartItem = z.infer<typeof updateCartItemSchema>;
 export type UpdateCartItemForm = z.infer<typeof updateCartItemSchema>;
 
-export const createCartItemSchema = cartItemSchema.pick({
+export const createCartItemSchema = cartItemSchema
+  .pick({
     cartId: true,
     productItemId: true,
     nameProductItem: true,
     price: true,
     quantity: true,
     imageProductItem: true,
-}).required()
+  })
+  .required();
 // .transform((val)=>{
 //     return{
 //         ...val,
@@ -39,11 +56,6 @@ export const createCartItemSchema = cartItemSchema.pick({
 //         cartId : val.cartId,
 //     }
 // })
-;
 
 export type CreateCartItem = z.infer<typeof createCartItemSchema>;
 export type CreateCartItemForm = z.infer<typeof createCartItemSchema>;
-
-
-
-

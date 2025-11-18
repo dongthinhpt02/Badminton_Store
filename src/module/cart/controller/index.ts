@@ -6,19 +6,29 @@ import { cartSchema } from "../model";
 import { ICartService } from "../interface";
 import { ICartItemService } from "../../cartitem/interface";
 import { ObjectId } from "mongodb";
-import { cartItemSchema, CreateCartItem, createCartItemSchema, UpdateCartItem, updateCartItemSchema } from "../../cartitem/model";
+import {
+  cartItemSchema,
+  CreateCartItem,
+  createCartItemSchema,
+  UpdateCartItem,
+  updateCartItemSchema,
+} from "../../cartitem/model";
 import Logger from "../../../shared/utils/logger";
 import appConfig from "../../../shared/common/config";
 import { responseErr } from "../../../shared/utils/error";
-import { createVnpayChecksum, sortObject } from "../../../shared/utils/dateformat";
+import {
+  createVnpayChecksum,
+  sortObject,
+} from "../../../shared/utils/dateformat";
 import { IOrderService } from "../../order/interface";
 import { mongodbService } from "../../../shared/common/mongodb";
 
 export class HttpCartController {
-  constructor(private readonly service: ICartService,
+  constructor(
+    private readonly service: ICartService,
     private readonly cartItemService: ICartItemService,
-    private readonly orderSerivce : IOrderService
-  ) { }
+    private readonly orderSerivce: IOrderService
+  ) {}
 
   private async insertCart(ctx: any) {
     const user_id = ctx.decoded.sub;
@@ -32,8 +42,8 @@ export class HttpCartController {
     const body = ctx.body as CreateCartItem;
     const user_id = ctx.decoded.sub;
     const cart = await this.service.getCartById(user_id);
-    if(!cart){
-      throw new Error ("Cart not found");
+    if (!cart) {
+      throw new Error("Cart not found");
     }
     const form = createCartItemSchema.parse({
       ...body,
@@ -67,7 +77,8 @@ export class HttpCartController {
 
   private async updateCartTotals(ctx: AuthContext) {
     const id = ctx.decoded.sub;
-    const data = await this.service.updateCartTotals(id);
+    const { selectedItems } = ctx.body as { selectedItems: string[] };
+    const data = await this.service.updateCartTotals(id, selectedItems);
     return successResponse(data, ctx);
   }
   // private async updateCart(ctx: AuthContext) {
@@ -90,38 +101,37 @@ export class HttpCartController {
       to_ward_code: string;
     };
     const abc = await this.service.calculateShippingFee(id, payload);
-    
+
     const GHN_TOKEN = appConfig.GHN.token as string;
-    const baseURL = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee";
+    const baseURL =
+      "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee";
     const response = await fetch(baseURL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Token": appConfig.GHN.token || "",
-        "ShopId": appConfig.GHN.shopId || "",
+        Token: appConfig.GHN.token || "",
+        ShopId: appConfig.GHN.shopId || "",
       },
       body: JSON.stringify({
-        "from_district_id": abc.from_district_id,
-        "from_ward_code": abc.from_ward_code,
-        "to_district_id": abc.to_district_id,
-        "to_ward_code": abc.to_ward_code,
-        "service_id": Number(appConfig.GHN.serviceId),
-        "service_type_id": 2,
-        "height": abc.height,
-        "length": abc.length,
-        "weight": abc.weight,
-        "width": abc.width,
-        "insurance_value": abc.insurance_value || 0,
-        "coupon": "",
-        "items": abc.items,
+        from_district_id: abc.from_district_id,
+        from_ward_code: abc.from_ward_code,
+        to_district_id: abc.to_district_id,
+        to_ward_code: abc.to_ward_code,
+        service_id: Number(appConfig.GHN.serviceId),
+        service_type_id: 2,
+        height: abc.height,
+        length: abc.length,
+        weight: abc.weight,
+        width: abc.width,
+        insurance_value: abc.insurance_value || 0,
+        coupon: "",
+        items: abc.items,
       }),
     });
     const resData = await response.json();
     console.log(response.body);
     console.log(resData);
     const totalFee = resData.data.total;
-    
-    
 
     return successResponse(totalFee, ctx);
   }
@@ -139,28 +149,29 @@ export class HttpCartController {
     const abc = await this.service.calculateTotalFee(id, payload);
     //  console.log(abc);
     const GHN_TOKEN = appConfig.GHN.token as string;
-    const baseURL = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee";
+    const baseURL =
+      "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee";
     const response = await fetch(baseURL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Token": appConfig.GHN.token || "",
-        "ShopId": appConfig.GHN.shopId || "",
+        Token: appConfig.GHN.token || "",
+        ShopId: appConfig.GHN.shopId || "",
       },
       body: JSON.stringify({
-        "from_district_id": abc.from_district_id,
-        "from_ward_code": abc.from_ward_code,
-        "to_district_id": abc.to_district_id,
-        "to_ward_code": abc.to_ward_code,
-        "service_id": Number(appConfig.GHN.serviceId),
-        "service_type_id": 2,
-        "height": abc.height,
-        "length": abc.length,
-        "weight": abc.weight,
-        "width": abc.width,
-        "insurance_value": abc.insurance_value || 0,
-        "coupon": "",
-        "items": abc.items,
+        from_district_id: abc.from_district_id,
+        from_ward_code: abc.from_ward_code,
+        to_district_id: abc.to_district_id,
+        to_ward_code: abc.to_ward_code,
+        service_id: Number(appConfig.GHN.serviceId),
+        service_type_id: 2,
+        height: abc.height,
+        length: abc.length,
+        weight: abc.weight,
+        width: abc.width,
+        insurance_value: abc.insurance_value || 0,
+        coupon: "",
+        items: abc.items,
       }),
     });
     const resData = await response.json();
@@ -173,46 +184,51 @@ export class HttpCartController {
     const totalFee = cart.totalPrice + totalFeeShipping;
 
     const findDratOrder = await mongodbService.draftorder.findOne({
-      userId: new ObjectId(id)});
+      userId: new ObjectId(id),
+    });
     if (findDratOrder) {
       await mongodbService.draftorder.deleteMany({
-        userId: new ObjectId(id)
+        userId: new ObjectId(id),
       });
     }
-    const user = await mongodbService.users.findOne({_id : new ObjectId(id)});
-    if(!user){
+    const user = await mongodbService.users.findOne({ _id: new ObjectId(id) });
+    if (!user) {
       throw new Error("User not found");
     }
     const draft = {
-      _id : new ObjectId(),
+      _id: new ObjectId(),
       userId: new ObjectId(id),
-      fullname : user.fullname as string,
+      fullname: user.fullname as string,
       totalQuantity: cart.totalQuantity as number,
       totalCart: cart.totalPrice as number,
       shippingFee: totalFeeShipping as number,
-      totalCartOrder : totalFee as number,
+      totalCartOrder: totalFee as number,
       from_district_id: abc.from_district_id as number,
       from_ward_code: abc.from_ward_code as string,
       to_district_id: abc.to_district_id as number,
       to_ward_code: abc.to_ward_code as string,
-      phonenumber : payload.phonenumber as string,
+      phonenumber: payload.phonenumber as string,
       address: payload.address as string,
-    }
+    };
     const order = await this.orderSerivce.insertDraftOrder(draft);
 
-    return successResponse(totalFee, ctx);
+    return successResponse(
+      {
+        shippingFee: totalFeeShipping,
+        totalCartOrder: totalFee,
+      },
+      ctx
+    );
   }
   private async VNPayPayment(ctx: AuthContext) {
     const id = ctx.decoded.sub;
     const payload = ctx.body as {
-      amount: number
+      amount: number;
     };
     const data = await this.service.VNPayPayment(id, payload);
     return successResponse(data, ctx);
   }
 
-  
-  
   getRoutes(mdlFactory: MdlFactory) {
     const cartsRoute = new Elysia({ prefix: "/cart" })
       .derive(mdlFactory.auth)

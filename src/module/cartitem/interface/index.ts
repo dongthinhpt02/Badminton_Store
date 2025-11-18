@@ -1,16 +1,25 @@
-import { CartItem, CreateCartItem, UpdateCartItem, UpdateCartItemForm } from "../model";
+import {
+  CartItem,
+  CreateCartItem,
+  UpdateCartItem,
+  UpdateCartItemForm,
+} from "../model";
 
 export interface ICartItemRepository {
-    insert: (cartitem: CartItem) => Promise<CartItem>;
-    update: (id: string, form: UpdateCartItemForm) => Promise<CartItem | null>;
-    delete: (id: string) => Promise<boolean>;
-    findAllCartItemByUserId : (id : string) => Promise<CartItem[] | null>;
-    findCartItemById : (id : string) => Promise<CartItem | null>;
+  insert: (cartitem: CartItem) => Promise<CartItem>;
+  update: (id: string, form: UpdateCartItemForm) => Promise<CartItem | null>;
+  delete: (id: string) => Promise<boolean>;
+  findAllCartItemByUserId: (id: string) => Promise<CartItem[] | null>;
+  findCartItemById: (id: string) => Promise<CartItem | null>;
+  tickCartItem: (id: string) => Promise<boolean>;
+  untickCartItem: (id: string) => Promise<boolean>;
 }
 export interface ICartItemService {
-    create: (cartitem: CreateCartItem) => Promise<CartItem>;
-    update: (id: string, form: UpdateCartItemForm) => Promise<CartItem | null>;
-    delete: (id: string) => Promise<boolean>;
-    getAllCartItemByUserId : (id : string) => Promise<CartItem[] | null>;
-    getCartItemById : (id : string) => Promise<CartItem | null>;
+  create: (cartitem: CreateCartItem) => Promise<CartItem>;
+  update: (id: string, form: UpdateCartItemForm) => Promise<CartItem | null>;
+  delete: (id: string) => Promise<boolean>;
+  getAllCartItemByUserId: (id: string) => Promise<CartItem[] | null>;
+  getCartItemById: (id: string) => Promise<CartItem | null>;
+  tickCartItem: (id: string) => Promise<boolean>;
+  untickCartItem: (id: string) => Promise<boolean>;
 }

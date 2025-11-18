@@ -1,5 +1,12 @@
 import Elysia, { Context } from "elysia";
-import { loginSchema, signupSchema, updateProfileSchema, resetPassowrdSchema, changePasswordSchema, updateUserSchema } from "../model";
+import {
+  loginSchema,
+  signupSchema,
+  updateProfileSchema,
+  resetPassowrdSchema,
+  changePasswordSchema,
+  updateUserSchema,
+} from "../model";
 import { IUserService } from "../interface";
 import { successResponse } from "../../../shared/utils/response";
 import { AuthContext } from "../../../shared/middleware";
@@ -13,7 +20,7 @@ import { sendResetPasswordEmail } from "../../../shared/utils/mailer";
 import logger from "../../../shared/utils/logger";
 
 export class HttpUserController {
-  constructor(private readonly service: IUserService) { }
+  constructor(private readonly service: IUserService) {}
 
   private async login(ctx: Context) {
     const form = loginSchema.parse(ctx.body);
@@ -31,10 +38,13 @@ export class HttpUserController {
     } catch (err) {
       // Xử lý lỗi Zod
       if (err instanceof z.ZodError) {
-        return new Response(JSON.stringify({
-          error: "Validation failed",
-          details: err.errors
-        }), { status: 400 });
+        return new Response(
+          JSON.stringify({
+            error: "Validation failed",
+            details: err.errors,
+          }),
+          { status: 400 }
+        );
       }
       throw err;
     }
@@ -49,10 +59,13 @@ export class HttpUserController {
     } catch (err) {
       // Xử lý lỗi Zod
       if (err instanceof z.ZodError) {
-        return new Response(JSON.stringify({
-          error: "Validation failed",
-          details: err.errors
-        }), { status: 400 });
+        return new Response(
+          JSON.stringify({
+            error: "Validation failed",
+            details: err.errors,
+          }),
+          { status: 400 }
+        );
       }
       throw err;
     }
@@ -66,10 +79,13 @@ export class HttpUserController {
     } catch (err) {
       // Xử lý lỗi Zod
       if (err instanceof z.ZodError) {
-        return new Response(JSON.stringify({
-          error: "Validation failed",
-          details: err.errors
-        }), { status: 400 });
+        return new Response(
+          JSON.stringify({
+            error: "Validation failed",
+            details: err.errors,
+          }),
+          { status: 400 }
+        );
       }
       throw err;
     }
@@ -136,7 +152,10 @@ export class HttpUserController {
     const state = crypto.randomUUID();
     // Store context to verify
     ctx.store.login_state = state;
-    const redirectUri = await this.service.requestLogin({ provider: ctx.params.provider, state });
+    const redirectUri = await this.service.requestLogin({
+      provider: ctx.params.provider,
+      state,
+    });
 
     return successResponse({ url: redirectUri }, ctx);
   }
@@ -148,7 +167,7 @@ export class HttpUserController {
       login_state: ctx.store.login_state,
     });
     // Reset state
-    ctx.store.login_state = '';
+    ctx.store.login_state = "";
     return successResponse(profile, ctx);
   }
 
@@ -160,7 +179,10 @@ export class HttpUserController {
   private async getOrderByIdAndUserId(ctx: AuthContext) {
     const userId = ctx.decoded.sub;
     const id = ctx.query.id;
-    const order = await this.service.getOrderDetailByOrderIdAndUserId(id, userId);
+    const order = await this.service.getOrderDetailByOrderIdAndUserId(
+      id,
+      userId
+    );
     return successResponse(order, ctx);
   }
   private async getAllOrderProcessingByUserId(ctx: AuthContext) {
@@ -168,11 +190,11 @@ export class HttpUserController {
     const orders = await this.service.getAllOrderProcessingByUserId(userId);
     return successResponse(orders, ctx);
   }
-  private async getAllOrderShippedByUserId(ctx: AuthContext) {
-    const userId = ctx.decoded.sub;
-    const orders = await this.service.getAllOrderShippedByUserId(userId);
-    return successResponse(orders, ctx);
-  }
+  // private async getAllOrderShippedByUserId(ctx: AuthContext) {
+  //   const userId = ctx.decoded.sub;
+  //   const orders = await this.service.getAllOrderShippedByUserId(userId);
+  //   return successResponse(orders, ctx);
+  // }
   private async getAllOrderDeliveredByUserId(ctx: AuthContext) {
     const userId = ctx.decoded.sub;
     const orders = await this.service.getAllOrderDeliveredByUserId(userId);
@@ -216,20 +238,27 @@ export class HttpUserController {
       .put("/update-user", this.updateUser.bind(this))
       .get("/renew", this.renewToken.bind(this))
       .delete("/logout", this.logout.bind(this));
-    const oauthRoute = new Elysia({ prefix: '/oauth' })
-      .state('login_state', '')
-      .get('/request/:provider', this.requestLogin.bind(this))
-      .post('/login/:provider', this.loginWithProvider.bind(this));
-    const adminRoute = new Elysia({ prefix: "/admin" })
-      .post("/signup", this.signupAdmin.bind(this))
-    const shipperRoute = new Elysia({ prefix: "/shipper" })
-      .post("/signup", this.signupShipper.bind(this));
+    const oauthRoute = new Elysia({ prefix: "/oauth" })
+      .state("login_state", "")
+      .get("/request/:provider", this.requestLogin.bind(this))
+      .post("/login/:provider", this.loginWithProvider.bind(this));
+    const adminRoute = new Elysia({ prefix: "/admin" }).post(
+      "/signup",
+      this.signupAdmin.bind(this)
+    );
+    const shipperRoute = new Elysia({ prefix: "/shipper" }).post(
+      "/signup",
+      this.signupShipper.bind(this)
+    );
     const orderRoute = new Elysia({ prefix: "/order" })
       .derive(mdlFactory.auth)
       .get("/all-order", this.getAllOrdersByUserId.bind(this))
       .get("/detail-order", this.getOrderByIdAndUserId.bind(this))
-      .get("/all-order-processing", this.getAllOrderProcessingByUserId.bind(this))
-      .get("/all-order-shipped", this.getAllOrderShippedByUserId.bind(this))
+      .get(
+        "/all-order-processing",
+        this.getAllOrderProcessingByUserId.bind(this)
+      )
+      // .get("/all-order-shipped", this.getAllOrderShippedByUserId.bind(this))
       .get("/all-order-delivered", this.getAllOrderDeliveredByUserId.bind(this))
       .get("/all-order-completed", this.getAllOrderCompletedByUserId.bind(this))
       .get("/all-order-cancelled", this.getAllOrderCancelledByUserId.bind(this))

@@ -18,13 +18,18 @@ import { District } from "../../module/district/model";
 import { Ward } from "../../module/ward/model";
 import { DraftOrder, Order } from "../../module/order/model";
 import { OrderDetail } from "../../module/orderdetail/model";
+import { SizeType } from "../../module/sizetype/model";
+import { Supplier } from "../../module/supplier/model";
+import { Import } from "../../module/import/model";
+import { ImportDetail } from "../../module/importdetail/model";
 
-const uri = 'mongodb+srv://trandongthinh:Kirito123456@badmintonstore.jygkj.mongodb.net/?retryWrites=true&w=majority'
+const uri =
+  "mongodb+srv://trandongthinh:Kirito123456@badmintonstore.jygkj.mongodb.net/?retryWrites=true&w=majority";
 
 class MongoDatabaseService {
   private client: MongoClient;
   private db: Db;
-    ObjectId: any;
+  ObjectId: any;
 
   constructor() {
     this.client = new MongoClient(uri);
@@ -68,7 +73,7 @@ class MongoDatabaseService {
     return this.db.collection("cartitem");
   }
   get address(): Collection<Address> {
-    return this.db.collection("address"); 
+    return this.db.collection("address");
   }
   get brand(): Collection<Brand> {
     return this.db.collection("brand");
@@ -79,38 +84,50 @@ class MongoDatabaseService {
   get size(): Collection<Size> {
     return this.db.collection("size");
   }
-  get color(): Collection<Color>{
+  get sizetype(): Collection<SizeType> {
+    return this.db.collection("sizetype");
+  }
+  get color(): Collection<Color> {
     return this.db.collection("color");
   }
   get product(): Collection<Product> {
     return this.db.collection("product");
   }
-  get productitem (): Collection<ProductItem> {
+  get productitem(): Collection<ProductItem> {
     return this.db.collection("productitem");
   }
-  get discount (): Collection<Discount> {
+  get discount(): Collection<Discount> {
     return this.db.collection("discount");
   }
-  get payment (): Collection<Payment> {
+  get payment(): Collection<Payment> {
     return this.db.collection("payment");
   }
-  get province() : Collection<Province> {
+  get province(): Collection<Province> {
     return this.db.collection("province");
   }
-  get district() : Collection<District>{
+  get district(): Collection<District> {
     return this.db.collection("district");
   }
-  get ward() : Collection<Ward>{
+  get ward(): Collection<Ward> {
     return this.db.collection("ward");
   }
-  get order() : Collection<Order> {
+  get order(): Collection<Order> {
     return this.db.collection("order");
   }
-  get orderdetail () : Collection<OrderDetail> {
+  get orderdetail(): Collection<OrderDetail> {
     return this.db.collection("orderdetail");
   }
-  get draftorder () : Collection<DraftOrder> {
+  get draftorder(): Collection<DraftOrder> {
     return this.db.collection("draftorder");
+  }
+  get supplier(): Collection<Supplier> {
+    return this.db.collection("supplier");
+  }
+  get import(): Collection<Import> {
+    return this.db.collection("import");
+  }
+  get importdetail(): Collection<ImportDetail> {
+    return this.db.collection("importdetail");
   }
 }
 

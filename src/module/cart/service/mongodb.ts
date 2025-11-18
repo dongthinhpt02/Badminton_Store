@@ -5,9 +5,13 @@ import { Cart, cartSchema, IUpdateCartForm } from "../model";
 import { CartItem } from "../../cartitem/model";
 import appConfig from "../../../shared/common/config";
 import { getDimensionForProduct } from "../../../shared/common/type";
-import { createVnpayChecksum, formatDate, sortObject } from "../../../shared/utils/dateformat";
+import {
+  createVnpayChecksum,
+  formatDate,
+  sortObject,
+} from "../../../shared/utils/dateformat";
 import qs from "qs";
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export class MongodbCartRepository implements ICartRepository {
   async insert(cart: Cart): Promise<Cart> {
@@ -18,42 +22,46 @@ export class MongodbCartRepository implements ICartRepository {
     return found as Cart;
   }
   async findById(id: string): Promise<Cart | null> {
-    const cart = await mongodbService.cart.findOne({ userId: new ObjectId(id) });
+    const cart = await mongodbService.cart.findOne({
+      userId: new ObjectId(id),
+    });
     return cart;
   }
   async findByUserId(userId: string): Promise<Cart | null> {
     const userObjectId = new ObjectId(userId);
-    const result = await mongodbService.users.aggregate([
-      {
-        $match: { _id: userObjectId }
-      },
-      {
-        $lookup: {
-          from: "cart",
-          localField: "_id",
-          foreignField: "userId",
-          as: "cart"
-        }
-      },
-      {
-        $unwind: {
-          path: "$cart",
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: "cartitem",
-          localField: "cart._id",
-          foreignField: "cartId",
-          as: "cart.items"
-        }
-      }
-    ]).toArray();
+    const result = await mongodbService.users
+      .aggregate([
+        {
+          $match: { _id: userObjectId },
+        },
+        {
+          $lookup: {
+            from: "cart",
+            localField: "_id",
+            foreignField: "userId",
+            as: "cart",
+          },
+        },
+        {
+          $unwind: {
+            path: "$cart",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "cartitem",
+            localField: "cart._id",
+            foreignField: "cartId",
+            as: "cart.items",
+          },
+        },
+      ])
+      .toArray();
 
     // console.log(JSON.stringify(result, null, 2)); // In ra dễ đọc
 
-    const user = result[0]
+    const user = result[0];
     const resultTotal = user.cart;
 
     // console.log(resultTotal);
@@ -68,18 +76,35 @@ export class MongodbCartRepository implements ICartRepository {
     if (result.modifiedCount === 0) {
       throw new Error("Update failed");
     }
-    const updatedCart = await mongodbService.cart.findOne({ userId: new ObjectId(id) });
+    const updatedCart = await mongodbService.cart.findOne({
+      userId: new ObjectId(id),
+    });
     return updatedCart as Cart;
   }
-  async updateCartTotals(userId: string): Promise<Cart | null> {
-
-    const cart = await mongodbService.cart.findOne({ userId: new ObjectId(userId) });
+  async updateCartTotals(
+    userId: string,
+    selectedItems: string[]
+  ): Promise<Cart | null> {
+    const cart = await mongodbService.cart.findOne({
+      userId: new ObjectId(userId),
+    });
     if (!cart) {
       throw new Error("Cart not found");
     }
-    const cartItems = await mongodbService.cartitem.find({ cartId: cart._id }).toArray();
-    const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = cartItems.reduce((sum, item) => sum + item.totalPriceCartItem, 0);
+    const cartItems = await mongodbService.cartitem
+      .find({
+        cartId: cart._id,
+        _id: { $in: selectedItems.map((id) => new ObjectId(id)) },
+      })
+      .toArray();
+    const totalQuantity = cartItems.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    );
+    const totalPrice = cartItems.reduce(
+      (sum, item) => sum + item.totalPriceCartItem,
+      0
+    );
 
     await mongodbService.cart.updateOne(
       { _id: cart._id },
@@ -87,7 +112,7 @@ export class MongodbCartRepository implements ICartRepository {
         $set: {
           totalQuantity: totalQuantity,
           totalPrice: totalPrice,
-        }
+        },
       }
     );
     const updatedCart = await mongodbService.cart.findOne({ _id: cart._id });
@@ -147,41 +172,52 @@ export class MongodbCartRepository implements ICartRepository {
   //   }
   //   return body;
   // }
-  async calculateShippingFee(id: string, payload: {
-    from_district_id: number,
-    from_ward_code: string,
-    to_district_id: number,
-    to_ward_code: string
-  }): Promise<any> {
-    const cart = await mongodbService.cart.findOne({ userId: new ObjectId(id) });
+  async calculateShippingFee(
+    id: string,
+    payload: {
+      from_district_id: number;
+      from_ward_code: string;
+      to_district_id: number;
+      to_ward_code: string;
+    }
+  ): Promise<any> {
+    const cart = await mongodbService.cart.findOne({
+      userId: new ObjectId(id),
+    });
     if (!cart) {
       throw new Error("Cart not found");
     }
 
-    const cartItems = await mongodbService.cartitem.find({ cartId: cart._id }).toArray();
+    const cartItems = await mongodbService.cartitem
+      .find({ cartId: cart._id })
+      .toArray();
     if (!cartItems || cartItems.length === 0) {
       throw new Error("Cart items not found");
     }
 
-    const items = await Promise.all(cartItems.map(async (item) => {
-      const dim = await getDimensionForProduct(item.nameProductItem);
-      return {
-        name: item.nameProductItem,
-        quantity: item.quantity,
-        height: dim.height,
-        length: dim.length,
-        width: dim.width,
-        weight: dim.weight
-      };
-    }));
+    const items = await Promise.all(
+      cartItems.map(async (item) => {
+        const dim = await getDimensionForProduct(item.nameProductItem);
+        return {
+          name: item.nameProductItem,
+          quantity: item.quantity,
+          height: dim.height,
+          length: dim.length,
+          width: dim.width,
+          weight: dim.weight,
+        };
+      })
+    );
 
-    const totalWeight = items.reduce((sum, item) => sum + item.weight * item.quantity, 0);
-    const totalLength = Math.max(...items.map(item => item.length));
-    const totalWidth = Math.max(...items.map(item => item.width));
-    const totalHeight = Math.max(...items.map(item => item.height));
+    const totalWeight = items.reduce(
+      (sum, item) => sum + item.weight * item.quantity,
+      0
+    );
+    const totalLength = Math.max(...items.map((item) => item.length));
+    const totalWidth = Math.max(...items.map((item) => item.width));
+    const totalHeight = Math.max(...items.map((item) => item.height));
 
-
-    const insuranceValue = cart.totalPrice as number / 10 || 0;
+    const insuranceValue = (cart.totalPrice as number) / 10 || 0;
 
     const body = {
       from_district_id: payload.from_district_id,
@@ -195,48 +231,63 @@ export class MongodbCartRepository implements ICartRepository {
       length: totalLength,
       width: totalWidth,
       height: totalHeight,
-      items
+      items,
     };
 
     return body;
   }
-  async calculateTotalFee(id: string, payload: {
-    from_district_id: number,
-    from_ward_code: string,
-    to_district_id: number,
-    to_ward_code: string,
-    adress: string,
-    phonenumber : string,
-  }): Promise<any> {
-    const cart = await mongodbService.cart.findOne({ userId: new ObjectId(id) });
+  async calculateTotalFee(
+    id: string,
+    payload: {
+      from_district_id: number;
+      from_ward_code: string;
+      to_district_id: number;
+      to_ward_code: string;
+      adress: string;
+      phonenumber: string;
+      selectedItems: string[];
+    }
+  ): Promise<any> {
+    const cart = await mongodbService.cart.findOne({
+      userId: new ObjectId(id),
+    });
     if (!cart) {
       throw new Error("Cart not found");
     }
 
-    const cartItems = await mongodbService.cartitem.find({ cartId: cart._id }).toArray();
+    const cartItems = await mongodbService.cartitem
+      .find({
+        cartId: cart._id,
+        _id: { $in: payload.selectedItems.map((id) => new ObjectId(id)) },
+      })
+      .toArray();
     if (!cartItems || cartItems.length === 0) {
       throw new Error("Cart items not found");
     }
 
-    const items = await Promise.all(cartItems.map(async (item) => {
-      const dim = await getDimensionForProduct(item.nameProductItem);
-      return {
-        name: item.nameProductItem,
-        quantity: item.quantity,
-        height: dim.height,
-        length: dim.length,
-        width: dim.width,
-        weight: dim.weight
-      };
-    }));
+    const items = await Promise.all(
+      cartItems.map(async (item) => {
+        const dim = await getDimensionForProduct(item.nameProductItem);
+        return {
+          name: item.nameProductItem,
+          quantity: item.quantity,
+          height: dim.height,
+          length: dim.length,
+          width: dim.width,
+          weight: dim.weight,
+        };
+      })
+    );
 
-    const totalWeight = items.reduce((sum, item) => sum + item.weight * item.quantity, 0);
-    const totalLength = Math.max(...items.map(item => item.length));
-    const totalWidth = Math.max(...items.map(item => item.width));
-    const totalHeight = Math.max(...items.map(item => item.height));
+    const totalWeight = items.reduce(
+      (sum, item) => sum + item.weight * item.quantity,
+      0
+    );
+    const totalLength = Math.max(...items.map((item) => item.length));
+    const totalWidth = Math.max(...items.map((item) => item.width));
+    const totalHeight = Math.max(...items.map((item) => item.height));
 
-
-    const insuranceValue = cart.totalPrice as number / 10 || 0;
+    const insuranceValue = (cart.totalPrice as number) / 10 || 0;
 
     const body = {
       from_district_id: payload.from_district_id,
@@ -250,23 +301,29 @@ export class MongodbCartRepository implements ICartRepository {
       length: totalLength,
       width: totalWidth,
       height: totalHeight,
-      items
+      items,
     };
 
     return body;
   }
-  async VNPayPayment(id: string, payload: {
-    amount: number
-  }): Promise<any> {
+  async VNPayPayment(
+    id: string,
+    payload: {
+      amount: number;
+    }
+  ): Promise<any> {
     const user = await mongodbService.users.findOne({ _id: new ObjectId(id) });
     if (!user) {
       throw new Error("User not found");
     }
-    if (typeof payload.amount !== 'number' || isNaN(payload.amount) || payload.amount <= 0) {
+    if (
+      typeof payload.amount !== "number" ||
+      isNaN(payload.amount) ||
+      payload.amount <= 0
+    ) {
       throw new Error("Invalid amount");
     }
 
-    
     const body = {
       vnp_Version: "2.1.0",
       vnp_Command: "pay",
@@ -275,14 +332,14 @@ export class MongodbCartRepository implements ICartRepository {
       vnp_CreateDate: formatDate(new Date()),
       vnp_CurrCode: "VND",
       vnp_IpAddr: "127.0.0.1",
-      vnp_Locale: 'vn',
+      vnp_Locale: "vn",
       vnp_OrderInfo: "123456",
       vnp_OrderType: "other",
       vnp_TxnRef: new ObjectId().toHexString(), // Unique transaction reference
       vnp_ReturnUrl: encodeURIComponent(appConfig.VNP.vnpReturnUrl), // encodeURIComponent(appConfig.VNP.vnpReturnUrl,
-   
+
       // vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)), // 15 minutes from now
-    }
+    };
 
     const sortedParams = sortObject(body);
     const signData = qs.stringify(sortedParams, { encode: false });
@@ -291,13 +348,14 @@ export class MongodbCartRepository implements ICartRepository {
       throw new Error("Missing VNPAY Hash Secret");
     }
 
-    const hmac = crypto.createHmac('sha512', secretKey);
-    const signature = hmac.update(signData, 'utf-8').digest('hex');
+    const hmac = crypto.createHmac("sha512", secretKey);
+    const signature = hmac.update(signData, "utf-8").digest("hex");
 
-    sortedParams['vnp_SecureHash'] = signature;
+    sortedParams["vnp_SecureHash"] = signature;
 
-    const paymentUrl = `${appConfig.VNP.vnpUrl}?${qs.stringify(sortedParams, { encode: false })}`;
+    const paymentUrl = `${appConfig.VNP.vnpUrl}?${qs.stringify(sortedParams, {
+      encode: false,
+    })}`;
     return paymentUrl;
   }
-
 }
