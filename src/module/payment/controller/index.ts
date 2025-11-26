@@ -249,7 +249,7 @@ export class HttpPaymentController {
       );
     }
 
-    const order = {
+    const order: Order = {
       _id: new ObjectId(),
       userId: new ObjectId(user_id),
       fullname: user.fullname,
