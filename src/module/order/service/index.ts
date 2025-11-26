@@ -1,6 +1,11 @@
 import { OrderDetail } from "../../orderdetail/model";
 import { IOrderRepository, IOrderService } from "../interface";
-import { DateRangeForm, DraftOrder, Order } from "../model";
+import {
+  DateRangeForm,
+  DraftOrder,
+  Order,
+  UpdateDeliveredOrderForm,
+} from "../model";
 
 export class OrderService implements IOrderService {
   constructor(private readonly orderRepository: IOrderRepository) {}
@@ -60,9 +65,19 @@ export class OrderService implements IOrderService {
     );
     return result;
   }
+  // async getAllOrderCompletedBetweenTime(
+  //   startDate: Date,
+  //   endDate: Date
+  // ): Promise<Order[]> {
+  //   const result = await this.orderRepository.getAllOrderCompletedBetweenTime(
+  //     startDate,
+  //     endDate
+  //   );
+  //   return result;
+  // }
   async getAllOrderCompletedBetweenTime(
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ): Promise<Order[]> {
     const result = await this.orderRepository.getAllOrderCompletedBetweenTime(
       startDate,
@@ -86,8 +101,11 @@ export class OrderService implements IOrderService {
   //     const result = await this.orderRepository.getAllOrderByShipperId(shipperId);
   //     return result;
   // }
-  async takeOrderToDelivered(id: string): Promise<Order> {
-    const result = await this.orderRepository.takeOrderToDelivered(id);
+  async takeOrderToDelivered(
+    id: string,
+    form: UpdateDeliveredOrderForm
+  ): Promise<Order> {
+    const result = await this.orderRepository.takeOrderToDelivered(id, form);
     return result;
   }
   async generalStatistic(): Promise<any> {

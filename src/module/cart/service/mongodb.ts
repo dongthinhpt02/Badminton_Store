@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import { mongodbService } from "../../../shared/common/mongodb";
 import { ICartRepository } from "../interface";
 import { Cart, cartSchema, IUpdateCartForm } from "../model";
-import { CartItem } from "../../cartitem/model";
+import { CartItem, Status } from "../../cartitem/model";
 import appConfig from "../../../shared/common/config";
 import { getDimensionForProduct } from "../../../shared/common/type";
 import {
@@ -81,10 +81,7 @@ export class MongodbCartRepository implements ICartRepository {
     });
     return updatedCart as Cart;
   }
-  async updateCartTotals(
-    userId: string,
-    selectedItems: string[]
-  ): Promise<Cart | null> {
+  async updateCartTotals(userId: string): Promise<Cart | null> {
     const cart = await mongodbService.cart.findOne({
       userId: new ObjectId(userId),
     });
@@ -94,9 +91,10 @@ export class MongodbCartRepository implements ICartRepository {
     const cartItems = await mongodbService.cartitem
       .find({
         cartId: cart._id,
-        _id: { $in: selectedItems.map((id) => new ObjectId(id)) },
+        status: Status.Tick,
       })
       .toArray();
+
     const totalQuantity = cartItems.reduce(
       (sum, item) => sum + item.quantity,
       0
@@ -117,6 +115,32 @@ export class MongodbCartRepository implements ICartRepository {
     );
     const updatedCart = await mongodbService.cart.findOne({ _id: cart._id });
     return updatedCart as Cart;
+  }
+  async UntickCartItem(cartItemId: string): Promise<CartItem> {
+    const result = await mongodbService.cartitem.updateOne(
+      { _id: new ObjectId(cartItemId) },
+      { $set: { status: Status.Untick } }
+    );
+    if (result.modifiedCount === 0) {
+      throw new Error("Update failed");
+    }
+    const updatedCartItem = await mongodbService.cartitem.findOne({
+      _id: new ObjectId(cartItemId),
+    });
+    return updatedCartItem as CartItem;
+  }
+  async TickCartItem(cartItemId: string): Promise<CartItem> {
+    const result = await mongodbService.cartitem.updateOne(
+      { _id: new ObjectId(cartItemId) },
+      { $set: { status: Status.Tick } }
+    );
+    if (result.modifiedCount === 0) {
+      throw new Error("Update failed");
+    }
+    const updatedCartItem = await mongodbService.cartitem.findOne({
+      _id: new ObjectId(cartItemId),
+    });
+    return updatedCartItem as CartItem;
   }
   // async calculateShippingFee(id: string, payload: {
   //   form_district_id: number,
@@ -189,7 +213,7 @@ export class MongodbCartRepository implements ICartRepository {
     }
 
     const cartItems = await mongodbService.cartitem
-      .find({ cartId: cart._id })
+      .find({ cartId: cart._id, status: Status.Tick })
       .toArray();
     if (!cartItems || cartItems.length === 0) {
       throw new Error("Cart items not found");
@@ -245,7 +269,6 @@ export class MongodbCartRepository implements ICartRepository {
       to_ward_code: string;
       adress: string;
       phonenumber: string;
-      selectedItems: string[];
     }
   ): Promise<any> {
     const cart = await mongodbService.cart.findOne({
@@ -258,7 +281,7 @@ export class MongodbCartRepository implements ICartRepository {
     const cartItems = await mongodbService.cartitem
       .find({
         cartId: cart._id,
-        _id: { $in: payload.selectedItems.map((id) => new ObjectId(id)) },
+        status: Status.Tick,
       })
       .toArray();
     if (!cartItems || cartItems.length === 0) {

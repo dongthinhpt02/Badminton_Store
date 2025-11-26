@@ -670,13 +670,29 @@ export class HttpAdminController {
     return successResponse(data, ctx);
   }
   private async getAllOrderCompletedBetweenTime(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
+
+    // const data = await this.orderService.getAllOrderCompletedBetweenTime(
+    //   startDate,
+    //   endDate
+    // );
+    // return successResponse(data, ctx);
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+
     const data = await this.orderService.getAllOrderCompletedBetweenTime(
-      start,
-      end
+      startDate,
+      endDate
     );
+
     return successResponse(data, ctx);
   }
   private async getAllOrderByname(ctx: Context) {
@@ -703,7 +719,7 @@ export class HttpAdminController {
   private async takeOrderToDelivered(ctx: Context) {
     const id = ctx.query.id;
     const form = ctx.body as UpdateDeliveredOrderForm;
-    const data = await this.orderService.takeOrderToDelivered(id);
+    const data = await this.orderService.takeOrderToDelivered(id, form);
     return successResponse(data, ctx);
   }
   private async cancelOrder(ctx: Context) {

@@ -123,17 +123,37 @@ export class MongodbOrderRepository implements IOrderRepository {
 
     return orders as Order[];
   }
+  // async getAllOrderCompletedBetweenTime(
+  //   startDate: Date,
+  //   endDate: Date
+  // ): Promise<Order[]> {
+  //   const orders = await mongodbService.order
+  //     .find({
+  //       // status: OrderStatus.COMPLETED,
+  //       completed_at: {
+  //         $gte: startDate,
+  //         $lte: endDate,
+  //       },
+  //     })
+  //     .toArray();
+
+  //   return orders as Order[];
+  // }
   async getAllOrderCompletedBetweenTime(
-    startDate: Date,
-    endDate: Date
+    start: string, // dạng "2025-01-01"
+    end: string // dạng "2025-01-31"
   ): Promise<Order[]> {
+    // Convert từ yyyy-mm-dd → Date
+    const startDate = new Date(`${start}T00:00:00.000Z`);
+    const endDate = new Date(`${end}T23:59:59.999Z`);
+
     const orders = await mongodbService.order
       .find({
-        // status: OrderStatus.COMPLETED,
         completed_at: {
           $gte: startDate,
           $lte: endDate,
         },
+        // status: OrderStatus.COMPLETED
       })
       .toArray();
 
@@ -164,7 +184,10 @@ export class MongodbOrderRepository implements IOrderRepository {
   //     return orders as Order[];
   //   }
 
-  async takeOrderToDelivered(id: string): Promise<Order> {
+  async takeOrderToDelivered(
+    id: string,
+    form: UpdateDeliveredOrderForm
+  ): Promise<Order> {
     const order = await mongodbService.order.findOne({ _id: new ObjectId(id) });
     if (!order) {
       throw new Error("Order not found");

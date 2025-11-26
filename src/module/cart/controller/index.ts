@@ -76,10 +76,32 @@ export class HttpCartController {
   }
 
   private async updateCartTotals(ctx: AuthContext) {
-    const id = ctx.decoded.sub;
-    const { selectedItems } = ctx.body as { selectedItems: string[] };
-    const data = await this.service.updateCartTotals(id, selectedItems);
+    const user_id = ctx.decoded.sub;
+    const data = await this.service.updateCartTotals(user_id);
     return successResponse(data, ctx);
+
+    // ****************************
+    // const userId = ctx.decoded.sub;
+
+    // // Bảo đảm ctx.body là object
+    // if (!ctx.body || typeof ctx.body !== "object") {
+    //   return {
+    //     statusCode: 400,
+    //     message: "Invalid request body",
+    //   };
+    // }
+
+    // const { selectedItems } = ctx.body as { selectedItems: string[] };
+
+    // if (!Array.isArray(selectedItems)) {
+    //   return {
+    //     statusCode: 400,
+    //     message: "selectedItems must be an array",
+    //   };
+    // }
+
+    // const data = await this.service.updateCartTotals(userId, selectedItems);
+    // return successResponse(data, ctx);
   }
   // private async updateCart(ctx: AuthContext) {
   //   const user_id = ctx.decoded.sub;
@@ -87,6 +109,16 @@ export class HttpCartController {
   //   const data = await this.service.updateCart(form);
   //   return successResponse(data, ctx);
   // }
+  private async UntickCartItem(ctx: AuthContext) {
+    const cartItemId = ctx.query.id;
+    const data = await this.service.UntickCartItem(cartItemId);
+    return successResponse(data, ctx);
+  }
+  private async TickCartItem(ctx: AuthContext) {
+    const cartItemId = ctx.query.id;
+    const data = await this.service.TickCartItem(cartItemId);
+    return successResponse(data, ctx);
+  }
   private async deleteCartItem(ctx: AuthContext) {
     const id = ctx.params.id;
     const data = await this.cartItemService.delete(id);
@@ -237,6 +269,8 @@ export class HttpCartController {
       .put("/updatetotal", this.updateCartTotals.bind(this))
       .post("/items/insert", this.insertCartItem.bind(this))
       .put("/items/update", this.updateCartItem.bind(this))
+      .put("/items/untick", this.UntickCartItem.bind(this))
+      .put("/items/tick", this.TickCartItem.bind(this))
       .post("/calculate-shipping-fee", this.calculateShippingFee.bind(this))
       .post("/calculate-total-cart", this.calculateTotalCart.bind(this))
       // .post("/vnpay-payment", this.VNPayPayment.bind(this))

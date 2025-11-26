@@ -16,22 +16,27 @@ const appConfig = {
     secretKey: process.env.SECRET_JWT,
     accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN as StringValue,
     refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN as StringValue,
-    resetPasswordTokenExpiresIn: process.env.RESET_PASSWORD_TOKEN_EXPIRES_IN as StringValue
+    resetPasswordTokenExpiresIn: process.env
+      .RESET_PASSWORD_TOKEN_EXPIRES_IN as StringValue,
   },
   google: {
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     googleRedirectUrl: `${process.env.APP_URL}:${process.env.APP_PORT}/users/google/callback`,
     smtpGoogleEmail: process.env.SMTP_GMAIL,
-    smtpGooglePassword: process.env.SMTP_GMAIL_PASSWORD
+    smtpGooglePassword: process.env.SMTP_GMAIL_PASSWORD,
   },
   app: {
     hashPasswordKey: process.env.SECRET_PASSWORD,
     hashRoleKey: process.env.SECRET_ROLE,
     port: process.env.APP_PORT,
     prefixApiUrl: process.env.PREFIX_API_URL as string,
-    corsWhiteList: ["http://localhost:8080", "http://localhost:5173"],
-    baseUrl: `${process.env.APP_URL}:${process.env.APP_PORT}`
+    corsWhiteList: [
+      "http://localhost:8080",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ],
+    baseUrl: `${process.env.APP_URL}:${process.env.APP_PORT}`,
   },
   GHN: {
     token: process.env.GHN_TOKEN,
@@ -44,10 +49,10 @@ const appConfig = {
     vnpHashSecret: process.env.VNP_HASHSECRET,
     vnpReturnUrl: `${process.env.APP_URL}:${process.env.APP_PORT}/payment/vnpay/return`,
   },
-  PERSONAL:{
-    phoneNumber : process.env.PHONE_NUMBER,
-    address : process.env.ADDRESS,
-  }
+  PERSONAL: {
+    phoneNumber: process.env.PHONE_NUMBER,
+    address: process.env.ADDRESS,
+  },
 };
 
 export default appConfig;

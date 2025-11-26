@@ -3,6 +3,7 @@ import { ICartRepository, ICartService } from "../interface";
 import { Cart, CartForm, IUpdateCartForm } from "../model";
 import { MongodbCartRepository } from "./mongodb";
 import { mongodbService } from "../../../shared/common/mongodb";
+import { CartItem } from "../../cartitem/model";
 
 export class CartService implements ICartService {
   constructor(private readonly repository: ICartRepository) {}
@@ -23,15 +24,17 @@ export class CartService implements ICartService {
     const result = await this.repository.update(id, form);
     return result;
   }
-  async updateCartTotals(
-    userId: string,
-    selectedItems: string[]
-  ): Promise<Cart> {
-    const result = await this.repository.updateCartTotals(
-      userId,
-      selectedItems
-    );
+  async updateCartTotals(userId: string): Promise<Cart> {
+    const result = await this.repository.updateCartTotals(userId);
     return result as Cart;
+  }
+  async UntickCartItem(cartItemId: string): Promise<CartItem> {
+    const result = await this.repository.UntickCartItem(cartItemId);
+    return result;
+  }
+  async TickCartItem(cartItemId: string): Promise<CartItem> {
+    const result = await this.repository.TickCartItem(cartItemId);
+    return result;
   }
   async calculateShippingFee(
     id: string,

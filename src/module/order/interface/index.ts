@@ -25,15 +25,22 @@ export interface IOrderRepository {
     startDate: Date,
     endDate: Date
   ) => Promise<Order[]>;
+  // getAllOrderCompletedBetweenTime: (
+  //   startDate: Date,
+  //   endDate: Date
+  // ) => Promise<Order[]>;
   getAllOrderCompletedBetweenTime: (
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ) => Promise<Order[]>;
   getAllOrderByName: (name: string) => Promise<Order[]>;
   getOrderByOrderId(orderId: string): Promise<Order>;
   getAllOrderByUserId(userId: string): Promise<Order[]>;
   // getAllOrderByShipperId (shipperId: string): Promise<Order[]>
-  takeOrderToDelivered(id: string): Promise<Order>;
+  takeOrderToDelivered(
+    id: string,
+    form: UpdateDeliveredOrderForm
+  ): Promise<Order>;
 
   //////****statistics *//////
   generalStatistic(): Promise<any>;
@@ -67,16 +74,23 @@ export interface IOrderService {
     startDate: Date,
     endDate: Date
   ) => Promise<Order[]>;
+  // getAllOrderCompletedBetweenTime: (
+  //   startDate: Date,
+  //   endDate: Date
+  // ) => Promise<Order[]>;
   getAllOrderCompletedBetweenTime: (
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ) => Promise<Order[]>;
   getAllOrderByName: (name: string) => Promise<Order[]>;
   getOrderByOrderId(orderId: string): Promise<Order>;
   getAllOrderByUserId(userId: string): Promise<Order[]>;
   // getAllOrderByShipperId (shipperId: string): Promise<Order[]>
 
-  takeOrderToDelivered(id: string): Promise<Order>;
+  takeOrderToDelivered(
+    id: string,
+    form: UpdateDeliveredOrderForm
+  ): Promise<Order>;
 
   generalStatistic(): Promise<any>;
   statisticByStatus(): Promise<any>;

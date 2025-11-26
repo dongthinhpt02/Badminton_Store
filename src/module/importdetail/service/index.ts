@@ -16,7 +16,14 @@ export class ImportDetailService implements IImportDetailService {
     private readonly productItemRepository: MongodbProductItemRepository
   ) {}
   async create(form: ICreateImportDetailForm): Promise<ImportDetail> {
-    const newImportDetail = createImportDetailSchema.parse(form);
+    const fixedForm = {
+      ...form,
+      importId: new ObjectId(form.importId),
+      productItemId: new ObjectId(form.productItemId),
+      colorId: new ObjectId(form.colorId),
+      sizeId: new ObjectId(form.sizeId),
+    };
+    const newImportDetail = createImportDetailSchema.parse(fixedForm);
 
     const importDetailToInsert: ImportDetail = {
       _id: new ObjectId(),

@@ -1,3 +1,4 @@
+import { CartItem } from "../../cartitem/model";
 import { Cart, IUpdateCartForm } from "../model";
 
 export interface ICartRepository {
@@ -5,10 +6,9 @@ export interface ICartRepository {
   findById: (id: string) => Promise<Cart | null>;
   findByUserId: (userId: string) => Promise<Cart | null>;
   update(id: string, form: IUpdateCartForm): Promise<Cart>;
-  updateCartTotals(
-    userId: string,
-    selectedItems: string[]
-  ): Promise<Cart | null>;
+  updateCartTotals(userId: string): Promise<Cart | null>;
+  UntickCartItem(cartItemId: string): Promise<CartItem>;
+  TickCartItem(cartItemId: string): Promise<CartItem>;
   calculateShippingFee(
     id: string,
     payload: {
@@ -25,7 +25,6 @@ export interface ICartRepository {
       from_ward_code: string;
       to_district_id: number;
       to_ward_code: string;
-      selectedItems: string[];
     }
   ): Promise<any>;
   VNPayPayment(
@@ -41,7 +40,9 @@ export interface ICartService {
   getCartById: (id: string) => Promise<Cart | null>;
   getCartByUserId: (userId: string) => Promise<Cart | null>;
   updateCart: (id: string, form: IUpdateCartForm) => Promise<Cart>;
-  updateCartTotals: (cartId: string, selectedItems: string[]) => Promise<Cart>;
+  updateCartTotals: (cartId: string) => Promise<Cart>;
+  UntickCartItem(cartItemId: string): Promise<CartItem>;
+  TickCartItem(cartItemId: string): Promise<CartItem>;
   calculateShippingFee: (
     id: string,
     payload: {
