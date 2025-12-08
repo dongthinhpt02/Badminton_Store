@@ -39,9 +39,14 @@ export class ImportDetailService implements IImportDetailService {
     const result = await this.importDetailRepository.insert(
       importDetailToInsert
     );
+    const findProductItem = await this.productItemRepository.findById(
+      newImportDetail.productItemId.toHexString()
+    );
+    const oldQuantity = findProductItem?.quantity || 0;
+    const newQuantity = oldQuantity + newImportDetail.quantity;
     const productItem = await this.productItemRepository.updateQuantity(
       newImportDetail.productItemId.toHexString(),
-      newImportDetail.quantity
+      newQuantity
     );
     return result as ImportDetail;
   }

@@ -34,7 +34,7 @@ export class ImportService implements IImportService {
     const result = await this.importRepository.findByTitle(title);
     return result;
   }
-  async getByTimeRange(start: Date, end: Date): Promise<Import[] | null> {
+  async getByTimeRange(start: string, end: string): Promise<Import[] | null> {
     const result = await this.importRepository.findByTimeRange(start, end);
     return result;
   }

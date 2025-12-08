@@ -14,11 +14,17 @@ import {
   IUpdateProductItemForm,
 } from "../../productitem/model";
 import { MdlFactory, TokenType } from "../../../shared/interface";
-import { dateRangeSchema } from "../../order/model";
+import { dateRangeSchema, UpdateDeliveredOrderForm } from "../../order/model";
 import { IOrderService } from "../../order/interface";
 import { IUserService } from "../../user/interface";
 import { ErrTokenInvalid } from "../../../shared/utils/error";
 import { AuthContext } from "../../../shared/middleware";
+import { ISizeTypeService } from "../../sizetype/interface";
+import { ISupplierService } from "../../supplier/interface";
+import { ImportService } from "../../import/service";
+import { ImportDetailService } from "../../importdetail/service";
+import { ICreateImportDetailForm } from "../../importdetail/model";
+import { ICreateImportForm } from "../../import/model";
 
 export class HttpManagerController {
   constructor(
@@ -26,10 +32,14 @@ export class HttpManagerController {
     private readonly brandService: IBrandService,
     private readonly cateService: ICateService,
     private readonly sizeService: ISizeService,
+    private readonly sizeTypeService: ISizeTypeService,
     private readonly colorService: IColorService,
     private readonly productService: IProductService,
     private readonly productItemService: IProductItemService,
-    private readonly orderService: IOrderService
+    private readonly orderService: IOrderService,
+    private readonly supplierService: ISupplierService,
+    private readonly importService: ImportService,
+    private readonly importDetailService: ImportDetailService
   ) {}
   async getAllUser(ctx: Context) {
     const data = await this.userService.getAllUser();
@@ -58,6 +68,10 @@ export class HttpManagerController {
   }
   async getAllActiveSize(ctx: Context) {
     const data = await this.sizeService.getAllActive();
+    return successResponse(data, ctx);
+  }
+  async getAllActiveSizeType(ctx: Context) {
+    const data = await this.sizeTypeService.getAllActive();
     return successResponse(data, ctx);
   }
   async getAllActiveColor(ctx: Context) {
@@ -206,13 +220,22 @@ export class HttpManagerController {
     return successResponse(data, ctx);
   }
   private async getAllOrderCreatedBetweenTime(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+
     const data = await this.orderService.getAllOrderCreatedBetweenTime(
-      start,
-      end
+      startDate,
+      endDate
     );
+
     return successResponse(data, ctx);
   }
   // private async getAllOrderShippedBetweenTime(ctx: Context) {
@@ -223,23 +246,41 @@ export class HttpManagerController {
   //     return successResponse(data, ctx);
   // }
   private async getAllOrderDeliveredBetweenTime(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+
     const data = await this.orderService.getAllOrderDeliveredBetweenTime(
-      start,
-      end
+      startDate,
+      endDate
     );
+
     return successResponse(data, ctx);
   }
   private async getAllOrderCompletedBetweenTime(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+
     const data = await this.orderService.getAllOrderCompletedBetweenTime(
-      start,
-      end
+      startDate,
+      endDate
     );
+
     return successResponse(data, ctx);
   }
   private async getAllOrderByname(ctx: Context) {
@@ -262,9 +303,72 @@ export class HttpManagerController {
   //     const data = await this.orderService.getAllOrderByShipperId(id);
   //     return successResponse(data, ctx);
   // }
+  // private async takeOrderToDelivered(ctx: Context) {
+  //   const id = ctx.query.id;
+  //   const data = await this.orderService.takeOrderToDelivered(id);
+  //   return successResponse(data, ctx);
+  // }
   private async takeOrderToDelivered(ctx: Context) {
     const id = ctx.query.id;
-    const data = await this.orderService.takeOrderToDelivered(id);
+    const form = ctx.body as UpdateDeliveredOrderForm;
+    const data = await this.orderService.takeOrderToDelivered(id, form);
+    return successResponse(data, ctx);
+  }
+  private async getAllSupplier(ctx: Context) {
+    const data = await this.supplierService.getAllActive();
+    return successResponse(data, ctx);
+  }
+  private async createImport(ctx: Context) {
+    const form = ctx.body as ICreateImportForm;
+    const data = await this.importService.create(form);
+    return successResponse(data, ctx);
+  }
+  private async getImportById(ctx: Context) {
+    const id = ctx.query.id;
+    const data = await this.importService.getById(id);
+    return successResponse(data, ctx);
+  }
+  private async getAllImport(ctx: Context) {
+    const data = await this.importService.getAll();
+    return successResponse(data, ctx);
+  }
+  private async getImportByTitle(ctx: Context) {
+    const title = ctx.query.title;
+    const data = await this.importService.getByTitle(title);
+    return successResponse(data, ctx);
+  }
+  private async getImportByTimeRange(ctx: Context) {
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+    const data = await this.importService.getByTimeRange(startDate, endDate);
+    return successResponse(data, ctx);
+  }
+
+  private async createImportDetail(ctx: Context) {
+    const form = ctx.body as ICreateImportDetailForm;
+    const data = await this.importDetailService.create(form);
+    return successResponse(data, ctx);
+  }
+  private async getImportDetailById(ctx: Context) {
+    const id = ctx.query.id;
+    const data = await this.importDetailService.getById(id);
+    return successResponse(data, ctx);
+  }
+  private async getAllImportDetail(ctx: Context) {
+    const data = await this.importDetailService.getAll();
+    return successResponse(data, ctx);
+  }
+  private async getImportDetailByImportId(ctx: Context) {
+    const importId = ctx.query.importId;
+    const data = await this.importDetailService.getByImportId(importId);
     return successResponse(data, ctx);
   }
   getRoutes(mdlFactory: MdlFactory) {
@@ -284,6 +388,10 @@ export class HttpManagerController {
     const sizeRoutes = new Elysia({ prefix: "/size" }).get(
       "",
       this.getAllActiveSize.bind(this)
+    );
+    const sizeTypeRoutes = new Elysia({ prefix: "/sizetype" }).get(
+      "",
+      this.getAllActiveSizeType.bind(this)
     );
     const colorRoutes = new Elysia({ prefix: "/color" }).get(
       "",
@@ -317,10 +425,7 @@ export class HttpManagerController {
       .get("/all-order-delivered", this.getAllOrderDelivered.bind(this))
       .get("/all-order-completed", this.getAllOrderCompleted.bind(this))
       .get("/all-order-cancelled", this.getAllOrderCancelled.bind(this))
-      .get(
-        "/order-processing/time",
-        this.getAllOrderCreatedBetweenTime.bind(this)
-      )
+      .get("/order-created/time", this.getAllOrderCreatedBetweenTime.bind(this))
       // .get("/order-shipped/time", this.getAllOrderShippedBetweenTime.bind(this))
       .get(
         "/order-delivered/time",
@@ -336,8 +441,30 @@ export class HttpManagerController {
       // .get("/shipper-id", this.getAllOrderByShipperId.bind(this))
       .put("/take-delivered", this.takeOrderToDelivered.bind(this));
 
+    const supplierRoutes = new Elysia({ prefix: "/supplier" }).get(
+      "",
+      this.getAllSupplier.bind(this)
+    );
+    const importRoutes = new Elysia({ prefix: "/import" })
+      .derive(mdlFactory.auth)
+      .post("/create", this.createImport.bind(this))
+      .get("", this.getAllImport.bind(this))
+      .get("/search/id", this.getImportById.bind(this))
+      .get("/search/title", this.getImportByTitle.bind(this))
+      .get("/search/time-range", this.getImportByTimeRange.bind(this));
+    const importDetailRoutes = new Elysia({ prefix: "/import/import-detail" })
+      .derive(mdlFactory.auth)
+      .post("/create", this.createImportDetail.bind(this))
+      .get("", this.getAllImportDetail.bind(this))
+      .get("/search/id", this.getImportDetailById.bind(this))
+      .get("/search/import-id", this.getImportDetailByImportId.bind(this));
+
+    module.use(importRoutes);
+    module.use(importDetailRoutes);
+    module.use(supplierRoutes);
     module.use(order);
     module.use(sizeRoutes);
+    module.use(sizeTypeRoutes);
     module.use(colorRoutes);
     module.use(cateRoutes);
     module.use(productRoutes);

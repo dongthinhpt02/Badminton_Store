@@ -76,16 +76,20 @@ export class MongodbOrderRepository implements IOrderRepository {
     return orders as Order[];
   }
   async getAllOrderCreatedBetweenTime(
-    startDate: Date,
-    endDate: Date
+    start: string,
+    end: string
   ): Promise<Order[]> {
+    // Convert từ yyyy-mm-dd → Date
+    const startDate = new Date(`${start}T00:00:00.000Z`);
+    const endDate = new Date(`${end}T23:59:59.999Z`);
+
     const orders = await mongodbService.order
       .find({
-        // status: OrderStatus.PROCESSING,
         created_at: {
           $gte: startDate,
           $lte: endDate,
         },
+        // status: OrderStatus.COMPLETED
       })
       .toArray();
 
@@ -108,16 +112,20 @@ export class MongodbOrderRepository implements IOrderRepository {
   //   return orders as Order[];
   // }
   async getAllOrderDeliveredBetweenTime(
-    startDate: Date,
-    endDate: Date
+    start: string,
+    end: string
   ): Promise<Order[]> {
+    // Convert từ yyyy-mm-dd → Date
+    const startDate = new Date(`${start}T00:00:00.000Z`);
+    const endDate = new Date(`${end}T23:59:59.999Z`);
+
     const orders = await mongodbService.order
       .find({
-        // status: OrderStatus.DELIVERED,
         delivered_at: {
           $gte: startDate,
           $lte: endDate,
         },
+        // status: OrderStatus.COMPLETED
       })
       .toArray();
 

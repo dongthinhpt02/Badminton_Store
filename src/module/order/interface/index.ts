@@ -17,13 +17,13 @@ export interface IOrderRepository {
   getAllOrderCompleted: () => Promise<Order[]>;
   getAllOrderCancelled: () => Promise<Order[]>;
   getAllOrderCreatedBetweenTime: (
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ) => Promise<Order[]>;
   // getAllOrderShippedBetweenTime : (startDate: Date, endDate: Date) => Promise<Order[]>
   getAllOrderDeliveredBetweenTime: (
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ) => Promise<Order[]>;
   // getAllOrderCompletedBetweenTime: (
   //   startDate: Date,
@@ -66,13 +66,13 @@ export interface IOrderService {
   getAllOrderCancelled: () => Promise<Order[]>;
 
   getAllOrderCreatedBetweenTime: (
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ) => Promise<Order[]>;
   // getAllOrderShippedBetweenTime : (startDate: Date, endDate: Date) => Promise<Order[]>
   getAllOrderDeliveredBetweenTime: (
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ) => Promise<Order[]>;
   // getAllOrderCompletedBetweenTime: (
   //   startDate: Date,

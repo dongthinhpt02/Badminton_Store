@@ -27,9 +27,12 @@ export class MongodbImportRepository implements IImportRepository {
       .toArray();
     return result as Import[] | null;
   }
-  async findByTimeRange(start: Date, end: Date): Promise<Import[] | null> {
+  async findByTimeRange(start: string, end: string): Promise<Import[] | null> {
+    const startDate = new Date(`${start}T00:00:00.000Z`);
+    const endDate = new Date(`${end}T23:59:59.999Z`);
+
     const result = await mongodbService.import
-      .find({ importDate: { $gte: start, $lte: end } })
+      .find({ importDate: { $gte: startDate, $lte: endDate } })
       .toArray();
     return result as Import[] | null;
   }

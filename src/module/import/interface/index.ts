@@ -5,7 +5,7 @@ export interface IImportRepository {
   findById: (id: string) => Promise<Import | null>;
   findAll: () => Promise<Import[]>;
   findByTitle: (title: string) => Promise<Import[] | null>;
-  findByTimeRange: (start: Date, end: Date) => Promise<Import[] | null>;
+  findByTimeRange: (start: string, end: string) => Promise<Import[] | null>;
 }
 
 export interface IImportService {
@@ -13,5 +13,5 @@ export interface IImportService {
   getById: (id: string) => Promise<Import | null>;
   getAll: () => Promise<Import[]>;
   getByTitle: (title: string) => Promise<Import[] | null>;
-  getByTimeRange: (start: Date, end: Date) => Promise<Import[] | null>;
+  getByTimeRange: (start: string, end: string) => Promise<Import[] | null>;
 }

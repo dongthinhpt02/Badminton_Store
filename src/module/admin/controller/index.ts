@@ -640,13 +640,22 @@ export class HttpAdminController {
     return successResponse(data, ctx);
   }
   private async getAllOrderCreatedBetweenTime(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+
     const data = await this.orderService.getAllOrderCreatedBetweenTime(
-      start,
-      end
+      startDate,
+      endDate
     );
+
     return successResponse(data, ctx);
   }
   // private async getAllOrderShippedBetweenTime(ctx: Context) {
@@ -660,13 +669,22 @@ export class HttpAdminController {
   //   return successResponse(data, ctx);
   // }
   private async getAllOrderDeliveredBetweenTime(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const { startDate, endDate } = ctx.query;
+
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+
     const data = await this.orderService.getAllOrderDeliveredBetweenTime(
-      start,
-      end
+      startDate,
+      endDate
     );
+
     return successResponse(data, ctx);
   }
   private async getAllOrderCompletedBetweenTime(ctx: Context) {
@@ -817,11 +835,17 @@ export class HttpAdminController {
     return successResponse(data, ctx);
   }
   private async getImportByTimeRange(ctx: Context) {
-    const { startDate, endDate } = dateRangeSchema.parse(ctx.query);
+    const { startDate, endDate } = ctx.query;
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const data = await this.importService.getByTimeRange(start, end);
+    // Validate dạng yyyy-mm-dd bằng regex
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      return {
+        statusCode: 400,
+        message: "Invalid date format (yyyy-mm-dd)",
+      };
+    }
+    const data = await this.importService.getByTimeRange(startDate, endDate);
     return successResponse(data, ctx);
   }
   //***********import detail********* */
@@ -971,15 +995,12 @@ export class HttpAdminController {
       .derive(mdlFactory.auth)
       .get("", this.getAllOrder.bind(this))
       .get("/detail-order", this.getOrderDetail.bind(this))
-      .get("/order-processing", this.getAllOrderProcessing.bind(this))
+      .get("/all-order-processing", this.getAllOrderProcessing.bind(this))
       // .get("/order-shipped", this.getAllOrderShipped.bind(this))
-      .get("/order-delivered", this.getAllOrderDelivered.bind(this))
-      .get("/order-completed", this.getAllOrderCompleted.bind(this))
-      .get("/order-cancelled", this.getAllOrderCancelled.bind(this))
-      .get(
-        "/order-processing/time",
-        this.getAllOrderCreatedBetweenTime.bind(this)
-      )
+      .get("/all-order-delivered", this.getAllOrderDelivered.bind(this))
+      .get("/all-order-completed", this.getAllOrderCompleted.bind(this))
+      .get("/all-order-cancelled", this.getAllOrderCancelled.bind(this))
+      .get("/order-created/time", this.getAllOrderCreatedBetweenTime.bind(this))
       // .get("/order-shipped/time", this.getAllOrderShippedBetweenTime.bind(this))
       .get(
         "/order-delivered/time",

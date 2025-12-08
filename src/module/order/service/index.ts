@@ -42,8 +42,8 @@ export class OrderService implements IOrderService {
     return result;
   }
   async getAllOrderCreatedBetweenTime(
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ): Promise<Order[]> {
     const result = await this.orderRepository.getAllOrderCreatedBetweenTime(
       startDate,
@@ -56,8 +56,8 @@ export class OrderService implements IOrderService {
   //     return result;
   // }
   async getAllOrderDeliveredBetweenTime(
-    startDate: Date,
-    endDate: Date
+    startDate: string,
+    endDate: string
   ): Promise<Order[]> {
     const result = await this.orderRepository.getAllOrderDeliveredBetweenTime(
       startDate,
