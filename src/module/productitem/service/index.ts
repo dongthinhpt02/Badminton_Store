@@ -18,9 +18,9 @@ export class ProductItemService implements IProductItemService {
       sizeId: new ObjectId(form.sizeId),
       colorId: new ObjectId(form.colorId),
     });
-    if (find) {
-      throw new Error("ProductItem already exists");
-    }
+    // if (find) {
+    //   throw new Error("ProductItem already exists");
+    // }
     const productItemToInsert = {
       _id: new ObjectId(),
       productId: form.productId,
