@@ -9,6 +9,7 @@ import { Order, OrderStatus } from "../../order/model";
 import appConfig from "../../../shared/common/config";
 import { getDimensionForOrder } from "../../../shared/common/type";
 import axios from "axios";
+import { Status } from "../../cartitem/model";
 
 export class HttpPaymentController {
   constructor(private readonly paymentService: IPaymentService) {}
@@ -102,6 +103,7 @@ export class HttpPaymentController {
     const cartItem = await mongodbService.cartitem
       .find({
         cartId: new ObjectId(cart?._id),
+        status: Status.Tick,
       })
       .toArray();
     for (const item of cartItem) {
@@ -131,6 +133,7 @@ export class HttpPaymentController {
     );
     const updatedCartItem = await mongodbService.cartitem.deleteMany({
       cartId: new ObjectId(cart?._id),
+      status: Status.Tick,
     });
 
     const items = await Promise.all(
@@ -280,6 +283,7 @@ export class HttpPaymentController {
     const cartItem = await mongodbService.cartitem
       .find({
         cartId: new ObjectId(cart?._id),
+        status: Status.Tick,
       })
       .toArray();
     for (const item of cartItem) {
@@ -306,6 +310,7 @@ export class HttpPaymentController {
     );
     await mongodbService.cartitem.deleteMany({
       cartId: new ObjectId(cart?._id),
+      status: Status.Tick,
     });
 
     // Prepare GHN payload
