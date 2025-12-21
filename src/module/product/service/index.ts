@@ -18,7 +18,7 @@ export class ProductService implements IProductService {
       cateId: new ObjectId(form.cateId),
     });
     if (find) {
-      throw new Error("Product already exists");
+      throw new Error("Sản phẩm đã tồn tại trong hệ thống !!");
     }
     const fixedForm = {
       ...form,
