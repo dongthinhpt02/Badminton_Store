@@ -268,6 +268,7 @@ export class MongodbCartRepository implements ICartRepository {
       to_district_id: number;
       to_ward_code: string;
       adress: string;
+      phonenumber: string;
     }
   ): Promise<any> {
     const cart = await mongodbService.cart.findOne({

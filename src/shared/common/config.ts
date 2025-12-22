@@ -37,6 +37,7 @@ const appConfig = {
       "http://localhost:3000",
     ],
     baseUrl: `${process.env.APP_URL}:${process.env.APP_PORT}`,
+    FEURL: `${process.env.APP_URL}:3000`,
   },
   GHN: {
     token: process.env.GHN_TOKEN,
