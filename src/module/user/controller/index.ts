@@ -234,7 +234,7 @@ export class HttpUserController {
 
       // auth middleware
       .derive(mdlFactory.auth)
-      .get("/", this.getProfile.bind(this))
+      .get("/get-profile", this.getProfile.bind(this))
       .put("/update-profile", this.updateProfile.bind(this))
       .put("/update-user", this.updateUser.bind(this))
       .get("/renew", this.renewToken.bind(this))
