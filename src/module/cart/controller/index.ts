@@ -246,6 +246,7 @@ export class HttpCartController {
 
     return successResponse(
       {
+        totalCart: cart.totalPrice,
         shippingFee: totalFeeShipping,
         totalCartOrder: totalFee,
       },
