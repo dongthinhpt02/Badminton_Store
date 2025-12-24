@@ -10,6 +10,7 @@ import {
   cartItemSchema,
   CreateCartItem,
   createCartItemSchema,
+  Status,
   UpdateCartItem,
   updateCartItemSchema,
 } from "../../cartitem/model";
@@ -213,6 +214,19 @@ export class HttpCartController {
     if (!cart) {
       throw new Error("Cart not found");
     }
+    // const cartItems = await this.cartItemService.getAllCartItemByUserId(id);
+    // if (!cartItems) {
+    //   throw new Error("Cart items not found");
+    // }
+    // let totalQuantity = 0;
+    // let totalPrice = 0;
+    // for (const item of cartItems) {
+    //   if (item.status === Status.Tick) {
+    //     totalQuantity += item.quantity;
+    //     totalPrice += item.totalPriceCartItem;
+    //   }
+    // }
+
     const totalFee = cart.totalPrice + totalFeeShipping;
 
     const findDratOrder = await mongodbService.draftorder.findOne({
