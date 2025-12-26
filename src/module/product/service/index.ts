@@ -16,6 +16,7 @@ export class ProductService implements IProductService {
     const find = await mongodbService.product.findOne({
       brandId: new ObjectId(form.brandId),
       cateId: new ObjectId(form.cateId),
+      sizeTypeId: new ObjectId(form.sizeTypeId),
     });
     if (find) {
       throw new Error("Sản phẩm đã tồn tại trong hệ thống !!");

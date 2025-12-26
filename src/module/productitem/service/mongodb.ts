@@ -164,7 +164,7 @@ export class MongodbProductItemRepository implements IProductItemRepository {
     if (!find || find.status === Status.INACTIVE) {
       return null;
     }
-    // console.log(find);
+    console.log(find);
     const result = await mongodbService.brand
       .aggregate([
         {
@@ -208,6 +208,7 @@ export class MongodbProductItemRepository implements IProductItemRepository {
         },
       ])
       .toArray();
+
     const allItems = result
       .map((item) => item.product?.productItem)
       .filter((item): item is ProductItem => !!item);
