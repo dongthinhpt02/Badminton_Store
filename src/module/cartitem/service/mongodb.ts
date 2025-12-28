@@ -62,9 +62,12 @@ export class MongodbCartItemRepository implements ICartItemRepository {
     if (!find) {
       return false;
     }
-    const result = mongodbService.cartitem.deleteOne({ _id: new ObjectId(id) });
+    const result = await mongodbService.cartitem.deleteOne({
+      _id: new ObjectId(id),
+    });
     return true;
   }
+
   async findAllCartItemByUserId(id: string): Promise<CartItem[] | null> {
     const userObjectId = new ObjectId(id);
     const result = await mongodbService.users

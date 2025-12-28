@@ -121,7 +121,7 @@ export class HttpCartController {
     return successResponse(data, ctx);
   }
   private async deleteCartItem(ctx: AuthContext) {
-    const id = ctx.params.id;
+    const id = ctx.query.id as string;
     const data = await this.cartItemService.delete(id);
     return successResponse(data, ctx);
   }
