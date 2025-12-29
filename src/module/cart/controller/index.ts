@@ -208,6 +208,9 @@ export class HttpCartController {
       }),
     });
     const resData = await response.json();
+    if (!resData.data || typeof resData.data.total !== "number") {
+      throw new Error("Khu vực này chưa hỗ trợ giao hàng");
+    }
     const totalFeeShipping = resData.data.total;
     // console.log(abc);
     const cart = await this.service.getCartByUserId(id);
@@ -239,7 +242,7 @@ export class HttpCartController {
     }
     const user = await mongodbService.users.findOne({ _id: new ObjectId(id) });
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Không tìm thấy người dùng");
     }
     const draft = {
       _id: new ObjectId(),
@@ -267,6 +270,107 @@ export class HttpCartController {
       ctx
     );
   }
+  // private async calculateTotalCart(ctx: AuthContext) {
+  //   const id = ctx.decoded.sub;
+  //   const payload = ctx.body as {
+  //     from_district_id: number;
+  //     from_ward_code: string;
+  //     to_district_id: number;
+  //     to_ward_code: string;
+  //     address: string;
+  //     phonenumber: string;
+  //   };
+  //   const abc = await this.service.calculateTotalFee(id, payload);
+  //   //  console.log(abc);
+  //   const GHN_TOKEN = appConfig.GHN.token as string;
+  //   const baseURL =
+  //     "https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee";
+  //   const response = await fetch(baseURL, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Token: appConfig.GHN.tokenProducttion || "",
+  //       ShopId: appConfig.GHN.shopIdProduction || "",
+  //     },
+  //     body: JSON.stringify({
+  //       from_district_id: abc.from_district_id,
+  //       from_ward_code: abc.from_ward_code,
+  //       to_district_id: abc.to_district_id,
+  //       to_ward_code: abc.to_ward_code,
+  //       service_id: Number(appConfig.GHN.serviceId),
+  //       service_type_id: 2,
+  //       height: abc.height,
+  //       length: abc.length,
+  //       weight: abc.weight,
+  //       width: abc.width,
+  //       insurance_value: abc.insurance_value || 0,
+  //       coupon: "",
+  //       items: abc.items,
+  //     }),
+  //   });
+  //   const resData = await response.json();
+  //   if (!resData.data || typeof resData.data.total !== "number") {
+  //     throw new Error("Khu vực này chưa hỗ trợ giao hàng");
+  //   }
+  //   const totalFeeShipping = resData.data.total;
+  //   // console.log(abc);
+  //   const cart = await this.service.getCartByUserId(id);
+  //   if (!cart) {
+  //     throw new Error("Cart not found");
+  //   }
+  //   // const cartItems = await this.cartItemService.getAllCartItemByUserId(id);
+  //   // if (!cartItems) {
+  //   //   throw new Error("Cart items not found");
+  //   // }
+  //   // let totalQuantity = 0;
+  //   // let totalPrice = 0;
+  //   // for (const item of cartItems) {
+  //   //   if (item.status === Status.Tick) {
+  //   //     totalQuantity += item.quantity;
+  //   //     totalPrice += item.totalPriceCartItem;
+  //   //   }
+  //   // }
+
+  //   const totalFee = cart.totalPrice + totalFeeShipping;
+
+  //   const findDratOrder = await mongodbService.draftorder.findOne({
+  //     userId: new ObjectId(id),
+  //   });
+  //   if (findDratOrder) {
+  //     await mongodbService.draftorder.deleteMany({
+  //       userId: new ObjectId(id),
+  //     });
+  //   }
+  //   const user = await mongodbService.users.findOne({ _id: new ObjectId(id) });
+  //   if (!user) {
+  //     throw new Error("User not found");
+  //   }
+  //   const draft = {
+  //     _id: new ObjectId(),
+  //     userId: new ObjectId(id),
+  //     fullname: user.fullname as string,
+  //     totalQuantity: cart.totalQuantity as number,
+  //     totalCart: cart.totalPrice as number,
+  //     shippingFee: totalFeeShipping as number,
+  //     totalCartOrder: totalFee as number,
+  //     from_district_id: abc.from_district_id as number,
+  //     from_ward_code: abc.from_ward_code as string,
+  //     to_district_id: abc.to_district_id as number,
+  //     to_ward_code: abc.to_ward_code as string,
+  //     phonenumber: payload.phonenumber as string,
+  //     address: payload.address as string,
+  //   };
+  //   const order = await this.orderSerivce.insertDraftOrder(draft);
+
+  //   return successResponse(
+  //     {
+  //       totalCart: cart.totalPrice,
+  //       shippingFee: totalFeeShipping,
+  //       totalCartOrder: totalFee,
+  //     },
+  //     ctx
+  //   );
+  // }
   private async VNPayPayment(ctx: AuthContext) {
     const id = ctx.decoded.sub;
     const payload = ctx.body as {

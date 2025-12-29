@@ -43,6 +43,9 @@ const appConfig = {
     token: process.env.GHN_TOKEN,
     shopId: process.env.GHN_SHOP_ID,
     serviceId: process.env.GHN_SERVICE_ID,
+    // tokenProducttion: process.env.GHN_TOKEN_PRODUCTION,
+    // shopIdProduction: process.env.GHN_ID_SHOP_PRODUCTION,
+    // serviceIdProduction: process.env.GHN_SERVICE_ID_PRODUCTION,
   },
   VNP: {
     vnpUrl: process.env.VNP_URL,
