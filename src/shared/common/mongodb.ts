@@ -15,7 +15,6 @@ import { Discount } from "../../module/discount/model";
 import { Payment } from "../../module/payment/model";
 import { Province } from "../../module/province/model";
 import { District } from "../../module/district/model";
-import { Ward } from "../../module/ward/model";
 import { DraftOrder, Order } from "../../module/order/model";
 import { OrderDetail } from "../../module/orderdetail/model";
 import { SizeType } from "../../module/sizetype/model";
@@ -107,9 +106,6 @@ class MongoDatabaseService {
   }
   get district(): Collection<District> {
     return this.db.collection("district");
-  }
-  get ward(): Collection<Ward> {
-    return this.db.collection("ward");
   }
   get order(): Collection<Order> {
     return this.db.collection("order");

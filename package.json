@@ -4,7 +4,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
-    "start" : " bun ./server.js  "
+    "start": " bun ./server.js  "
   },
   "dependencies": {
     "@bogeychan/elysia-oauth2": "^0.1.0",
@@ -39,6 +39,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^6.4.17",
     "@types/passport-google-oauth20": "^2.0.16",
     "bun-types": "latest"
